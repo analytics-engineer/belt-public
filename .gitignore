@@ -20,8 +20,9 @@ ENV/
 env/
 
 /user_workspace/*
-!/user_workspace/templates/
-!/user_workspace/templates/**
+!/user_workspace/python_scripts/
+/user_workspace/python_scripts/*
+!/user_workspace/python_scripts/templates/
 
 # Jupyter
 .ipynb_checkpoints/
