@@ -1,0 +1,138 @@
+services:
+  postgres-meta:
+    image: postgres:14
+    container_name: belt-postgres-meta
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${META_DB_NAME}
+      POSTGRES_USER: ${META_DB_USER}
+      POSTGRES_PASSWORD: ${META_DB_PASSWORD}
+    volumes:
+      - belt_pg_data:/var/lib/postgresql/data
+      - ./myetl/parser/belt_db.sql:/docker-entrypoint-initdb.d/001_init_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${META_DB_USER} -d ${META_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: belt-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - belt_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  keycloak-db:
+    image: postgres:16
+    container_name: belt-keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-change-me-local}
+    volumes:
+      - belt_keycloak_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3
+    container_name: belt-keycloak
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-change-me-local}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-change-me-local}
+      KC_HTTP_PORT: 8080
+      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL:-http://localhost:8080}
+      KC_HOSTNAME_STRICT: "false"
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: belt-backend:dev
+    container_name: belt-backend
+    env_file:
+      - .env
+    depends_on:
+      postgres-meta:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --root-path /api
+    volumes:
+      - ../belt_data/user_workspace/python_scripts:/app/user_workspace/python_scripts
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: belt-backend:dev
+    container_name: belt-celery-worker
+    env_file:
+      - .env
+    depends_on:
+      postgres-meta:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A worker.celery_app.celery_app worker --loglevel=info
+    volumes:
+      - ../belt_data/user_workspace/python_scripts:/app/user_workspace/python_scripts
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: belt-backend:dev
+    container_name: belt-scheduler
+    env_file:
+      - .env
+    depends_on:
+      postgres-meta:
+        condition: service_healthy
+    command: python -m backend.scheduler_worker
+    volumes:
+      - ../belt_data/user_workspace/python_scripts:/app/user_workspace/python_scripts
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        REACT_APP_OIDC_REQUIRED: ${REACT_APP_OIDC_REQUIRED:-false}
+        REACT_APP_OIDC_ISSUER_URL: ${REACT_APP_OIDC_ISSUER_URL:-}
+        REACT_APP_OIDC_CLIENT_ID: ${REACT_APP_OIDC_CLIENT_ID:-}
+        REACT_APP_OIDC_REDIRECT_URI: ${REACT_APP_OIDC_REDIRECT_URI:-}
+        REACT_APP_OIDC_SCOPE: ${REACT_APP_OIDC_SCOPE:-openid profile email}
+    image: belt-frontend:dev
+    container_name: belt-frontend
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+
+volumes:
+  belt_pg_data:
+  belt_redis_data:
+  belt_keycloak_db_data:

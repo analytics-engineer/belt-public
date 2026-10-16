@@ -1,0 +1,31 @@
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+COPY frontend/package*.json ./
+RUN npm install
+
+COPY frontend ./
+
+ARG REACT_APP_OIDC_REQUIRED=false
+ARG REACT_APP_OIDC_ISSUER_URL
+ARG REACT_APP_OIDC_CLIENT_ID
+ARG REACT_APP_OIDC_REDIRECT_URI
+ARG REACT_APP_OIDC_SCOPE=openid profile email
+
+ENV REACT_APP_OIDC_REQUIRED=$REACT_APP_OIDC_REQUIRED
+ENV REACT_APP_OIDC_ISSUER_URL=$REACT_APP_OIDC_ISSUER_URL
+ENV REACT_APP_OIDC_CLIENT_ID=$REACT_APP_OIDC_CLIENT_ID
+ENV REACT_APP_OIDC_REDIRECT_URI=$REACT_APP_OIDC_REDIRECT_URI
+ENV REACT_APP_OIDC_SCOPE=$REACT_APP_OIDC_SCOPE
+
+RUN npm run build
+
+FROM nginx:alpine
+
+COPY --from=build /app/build /usr/share/nginx/html
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
