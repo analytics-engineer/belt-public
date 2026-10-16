@@ -1,0 +1,53 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Environment
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Python packaging crap
+build/
+dist/
+*.egg-info/
+
+# Airflow
+airflow.db
+airflow-webserver.pid
+
+# PyCharm
+.idea/
+
+# Your compiled binaries
+*.so
+*.dll
+
+# JetBrains files
+*.iml
+out/
+
+# Temporary folders
+tmp/
+temp/
+
+#Docker
+docker-compose.override.yml

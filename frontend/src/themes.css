@@ -1,0 +1,395 @@
+
+body[data-theme="dark"] {
+  --app-bg: #1a1a1a;
+  --topbar-bg: #222;
+  --sidebar-bg: #252525;
+  --workspace-bg: #111;
+  --canvas-bg: #1a1a1a;
+  --activetab-bg: #f0f0f0;
+  --notactivetab-bg: #555;
+  --dropdown-bg: #2a2a2a;
+  --input-bg: #333;
+  --editor-bg: #1e1e1e;
+  --editor-notice: #2b2e2e;
+  --overlay-bg: rgba(34, 34, 34, 0.9);
+
+  --text: #fff;
+  --text-soft: #ccc;
+  --text-muted: #aaa;
+  --text-dim: #888;
+  --text-section: #dd5353;;
+  --text-code: #adbac7;
+  --text-dark: #000;
+
+  --border: #444;
+  --border-soft: #333;
+  --border-strong: #555;
+  --border-node: #007bff;
+  --border-tab: #03220911;
+  --button-area: rgba(34, 34, 34, 0.9);
+  --grid: #333;
+
+  --accent: #61dafb;
+  --primary: #007bff;
+  --success: #28a745;
+  --success-text: #47d16c;
+  --warning-text: #f9a825;
+  --danger-text: #ff4d4d;
+  --warning: #a89b20;
+  --danger: #dc3545;
+
+  --button-update: #d4b406;
+  --button-disabled: #7e7c7c;
+
+  --empty-text: #5a5757;
+  --empty-title: #302e2e;
+}
+
+body[data-theme="green"] {
+  --app-bg: #e8f5e9;
+  --topbar-bg: #c8e6c9;
+  --sidebar-bg: #dcedc8;
+  --workspace-bg: #f1f8e9;
+  --canvas-bg: #e8f5e9;
+  --activetab-bg: #e8f5e9;
+  --notactivetab-bg: #92c492;
+  --dropdown-bg: #c5e1a5;
+  --input-bg: #ffffff;
+  --editor-bg: #ffffff;
+  --editor-notice: #2b2e2e;
+  --overlay-bg: rgba(200, 230, 201, 0.9);
+
+  --text: #000000;
+  --text-soft: #ccc;
+  --text-muted: #635f5f;
+  --text-dim: #888;
+  --text-section: #681515;
+  --text-code: #4c5258;
+  --text-dark: #000;
+
+  --border: #81c784;
+  --border-soft: #a5d6a7;
+  --border-strong: #dfdada;
+  --border-tab: #81c784;
+  --button-area: rgba(213, 241, 213, 0.9);
+  --grid: #a19f9f;
+
+  --accent: #2e7d32;
+  --primary: #388e3c;
+  --success: #2e7d32;
+  --success-text: #47d16c;
+  --warning-text: #f9a825;
+  --danger-text: #ff4d4d;
+  --warning: #f9a825;;
+  --danger: #c62828;
+
+  --button-update: #d4b406;
+  --button-disabled: #1976d2;
+
+  --empty-text: #81a984;
+  --empty-title: #5d8f61;
+}
+
+:root,
+body[data-theme="light"] {
+  --app-bg: #ffffff;
+  --topbar-bg: #f5f5f5;
+  --sidebar-bg: #fafafa;
+  --workspace-bg: #ffffff;
+  --canvas-bg: #f8f9fa;
+  --activetab-bg: #ffffff;
+  --notactivetab-bg: #ddd8d8;
+  --dropdown-bg: #ffffff;
+  --input-bg: #ffffff;
+  --editor-bg: #f7f7f7;
+  --editor-notice: #eeeeee;
+  --overlay-bg: rgba(245, 245, 245, 0.9);
+
+  --text: #111111;
+  --text-soft: #333333;
+  --text-light: #ffffff;
+  --text-muted: #666666;
+  --text-dim: #888888;
+  --text-section: #8f1717;
+  --text-code: #24292f;
+  --text-dark: #000000;
+
+  --border: #dddddd;
+  --border-soft: #eeeeee;
+  --border-strong: #cccccc;
+  --border-node: #000;
+  --border-tab: #cccccc;
+  --button-area: rgba(245, 245, 245, 0.9);
+  --button-disabled: #1976d2;
+  --grid: #a19f9f;
+
+  --accent: #1976d2;
+  --primary: #1976d2;
+  --success: #2e7d32;
+  --success-text: #47d16c;
+  --warning-text: #f9a825;
+  --danger-text: #ff4d4d;
+  --warning: #f9a825;
+  --danger: #d32f2f;
+
+  --empty-text: #999999;
+  --empty-title: #cccccc;
+}
+
+body[data-theme="blue"] {
+  --app-bg: #ecf2f7;
+  --topbar-bg: #d6e9ff;
+  --sidebar-bg: #e3f2fd;
+  --workspace-bg: #ffffff;
+  --canvas-bg: #eaf3ff;
+  --activetab-bg: #eaf3ff;
+  --notactivetab-bg: #9ed3ff;
+  --dropdown-bg: #bbdefb;
+  --input-bg: #ffffff;
+  --editor-bg: #f7fbff;
+  --editor-notice: #e3f2fd;
+  --overlay-bg: rgba(214, 233, 255, 0.9);
+
+  --text: #020202;
+  --text-soft: #1565c0;
+  --text-muted: #1976d2;
+  --text-dim: #42a5f5;
+  --text-section: #681515;
+  --text-code: #0d305c;
+  --text-dark: #000000;
+
+  --border: #90caf9;
+  --border-soft: #bbdefb;
+  --border-strong: #64b5f6;
+  --border-node: #000;
+  --border-tab: #64b5f6;
+  --button-area: rgba(187, 222, 251, 0.9);
+  --button-disabled: #1976d2;
+  --grid: #a19f9f;
+
+  --accent: #1565c0;
+  --primary: #1976d2;
+  --success: #2e7d32;
+  --success-text: #47d16c;
+  --warning-text: #f9a825;
+  --danger-text: #ff4d4d;
+  --warning: #f9a825;
+  --danger: #c62828;
+
+  --empty-text: #8aa8c8;
+  --empty-title: #6f93bd;
+}
+
+body[data-theme="red"] {
+  --app-bg: #ffebee;
+  --topbar-bg: #ffcdd2;
+  --sidebar-bg: #ffdde1;
+  --workspace-bg: #fff5f6;
+  --canvas-bg: #ffebee;
+  --activetab-bg: #faebeb;
+  --notactivetab-bg: #ffa6a6;
+  --dropdown-bg: #ffcdd2;
+  --input-bg: #ffffff;
+  --editor-bg: #fff7f7;
+  --editor-notice: #ffebee;
+  --overlay-bg: rgba(255, 205, 210, 0.9);
+
+  --text: #1d1c1c;
+  --text-soft: #b71c1c;
+  --text-muted: #131111;
+  --text-dim: #d32f2f;
+  --text-section: #04549e;
+  --text-code: #7f0000;
+  --text-dark: #000000;
+
+  --border: #ef9a9a;
+  --border-soft: #ffcdd2;
+  --border-strong: #e57373;
+  --border-node: #000;
+  --border-tab: #e57373;
+  --button-area: rgba(255, 205, 210, 0.9);
+  --button-disabled: #d32f2f;
+  --grid: #a19f9f;
+
+  --accent: #c62828;
+  --primary: #d32f2f;
+  --success: #2e7d32;
+  --success-text: #47d16c;
+  --warning-text: #f9a825;
+  --danger-text: #ff4d4d;
+  --warning: #f9a825;
+  --danger: #b71c1c;
+
+  --empty-text: #c88a8a;
+  --empty-title: #b96f6f;
+}
+
+body[data-theme="pink"] {
+  --app-bg: #fff3f7;
+  --topbar-bg: #f8bbd0;
+  --sidebar-bg: #fce4ec;
+  --workspace-bg: #fff5f8;
+  --canvas-bg: #fce4ec;
+  --activetab-bg: #fff3f7;
+  --notactivetab-bg: #f8bbd0;
+  --dropdown-bg: #f8bbd0;
+  --input-bg: #ffffff;
+  --editor-bg: #fff7fa;
+  --editor-notice: #fce4ec;
+  --overlay-bg: rgba(68, 10, 204, 0.9);
+
+  --text: #111011;
+  --text-soft: #ad1457;
+  --text-muted: #161516;
+  --text-dim: #888;
+  --text-section: #04549e;
+  --text-code: #880e4f;
+  --text-dark: #000000;
+
+  --border: #f48fb1;
+  --border-soft: #f8bbd0;
+  --border-strong: #f7749f;
+  --border-node: #000;
+  --border-tab: #ec407a;
+  --button-area: rgba(245, 203, 218, 0.9);
+  --button-disabled: #c2185b;
+  --grid: #a19f9f;
+
+  --accent: #ad1457;
+  --primary: #c2185b;
+  --success: #2e7d32;
+  --success-text: #47d16c;
+  --warning-text: #f9a825;
+  --danger-text: #ff4d4d;
+  --warning: #f9a825;
+  --danger: #c62828;
+
+
+  --empty-text: #c98aa3;
+  --empty-title: #b96f8e;
+
+  --table-text: #fff;
+}
+
+.belt-button {
+  background: var(--primary);
+  color: var(--text-light);
+  border: none;
+  padding: 5px 16px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.belt-button:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.belt-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.belt-button:disabled {
+  background: var(--button-disabled);
+  cursor: default;
+  opacity: 0.6;
+} 
+
+.belt-button-danger:not(:disabled) {
+  background: var(--text-section);
+  color: var(--text-light);
+  border: none;
+  padding: 7px 16px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.belt-button-warning {
+  background: var(--warning);
+  color: var(--text);
+}
+
+.belt-button-success {
+  background: #57925a;
+  color: var(--text);
+}
+
+.belt-button-danger_run {
+  background: #c93131;
+  color: var(--text);
+}
+
+.belt-button-small {
+  padding: 5px 15px;
+}
+
+.belt-icon-button {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  padding: 2px;
+  opacity: 0.8;
+  transition: opacity 0.15s ease, transform 0.1s ease, filter 0.15s ease;
+}
+
+.belt-icon-button:hover {
+  opacity: 1;
+  filter: brightness(1.15);
+  /*transform: scale(1.00);*/
+}
+
+.belt-icon-button:active {
+  transform: scale(0.96);
+}
+
+.belt-section-title {
+  padding: 10px 10px 0 5px;
+  margin-top: 0;
+  font-size: 11px;
+  color: var(--text-section);
+  border-bottom: 1px solid var(--input-bg);
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease, filter 0.15s ease;
+}
+
+.belt-section-title:hover {
+  color: var(--text-muted);
+}
+
+.spin-icon {
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+.load-columns-button {
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+.load-columns-button:hover {
+  filter: brightness(1.25);
+  transform: scale(1.06);
+}
+
+.load-columns-button:active {
+  transform: scale(0.96);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.obligatory-notice {
+  color: #5e5a5a;
+  font-style: italic;
+  font-size: 14px
+}
+
+
