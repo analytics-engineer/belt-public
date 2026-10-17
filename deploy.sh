@@ -66,7 +66,10 @@ sed "s|\${SERVER_IP}|${SERVER_IP}|g" \
 
 mkdir -p ../belt_data/user_workspace/python_scripts/templates
 
-cp -rn user_workspace/python_scripts/templates/. \
-  ../belt_data/user_workspace/python_scripts/templates/
+if [ ! -f ../belt_data/user_workspace/python_scripts/.examples_initialized ]; then
+  cp -rn user_workspace/python_scripts/templates/. \
+    ../belt_data/user_workspace/python_scripts/templates/
+  touch ../belt_data/user_workspace/python_scripts/.examples_initialized
+fi
 
 docker compose --env-file .env up -d --build
