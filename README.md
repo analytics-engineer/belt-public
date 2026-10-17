@@ -16,6 +16,8 @@ Belt is an open-source ETL application for designing and running data workflows.
 - A fresh Ubuntu server with a public IPv4 address and root access.
 - Network access to GitHub and container/package registries.
 - Ports 80 (Belt) and 8080 (Keycloak) accessible from your browser. If your hosting provider uses a firewall, allow these ports there.
+- Suggested starting configuration: 2 vCPU, 4 GB RAM, and 20 GB of free SSD space.
+- Resource requirements depend on data volumes and concurrent workflows.
 
 ### Start
 
