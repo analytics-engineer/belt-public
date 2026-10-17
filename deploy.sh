@@ -64,6 +64,9 @@ sed "s|\${SERVER_IP}|${SERVER_IP}|g" \
   keycloak/belt-realm.template.json \
   > keycloak/belt-realm.json
 
-mkdir -p ../belt_data/user_workspace/python_scripts
+mkdir -p ../belt_data/user_workspace/python_scripts/templates
+
+cp -rn user_workspace/python_scripts/templates/. \
+  ../belt_data/user_workspace/python_scripts/templates/
 
 docker compose --env-file .env up -d --build
