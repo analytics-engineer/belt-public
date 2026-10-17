@@ -22,7 +22,7 @@ def test_clickhouse_connection(config: dict):
         value = result.result_rows[0][0]
 
         if value != 1:
-            raise ValueError("ClickHouse SELECT 1 вернул неожиданный результат")
+            raise ValueError("ClickHouse SELECT 1 returned an unexpected result")
 
         return {"status": "ok", "message": "ClickHouse connection OK"}
 
@@ -36,7 +36,7 @@ def ch_quote_ident(name: str):
 def ch_quote_table(target: str):
     parts = [p.strip() for p in str(target).split(".") if p.strip()]
     if len(parts) != 2:
-        raise ValueError(f"ClickHouse target должен быть в формате database.table, получено: {target}")
+        raise ValueError(f"ClickHouse target must be in database.table format, got: {target}")
 
     database_name, table_name = parts
     return f"{ch_quote_ident(database_name)}.{ch_quote_ident(table_name)}"

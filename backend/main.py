@@ -165,7 +165,7 @@ def table_identifier(table_name: str):
         return sql.Identifier(parts[0])
     if len(parts) == 2:
         return sql.Identifier(parts[0], parts[1])
-    raise HTTPException(status_code=400, detail="Некорректное имя таблицы")
+    raise HTTPException(status_code=400, detail="Invalid table name")
 
 def parse_grid_filters(request: Request):
     raw_filters = request.query_params.get("filters")
@@ -176,7 +176,7 @@ def parse_grid_filters(request: Request):
     try:
         parsed = json.loads(raw_filters)
     except Exception:
-        raise HTTPException(status_code=400, detail="Некорректный filters JSON")
+        raise HTTPException(status_code=400, detail="Invalid filters JSON")
 
     if not isinstance(parsed, dict):
         return {}
@@ -429,7 +429,7 @@ def delete_flow(flow_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Получение данных одного соединения для редактирования
+# Retrieve a single connection for editing
 @app.get("/connections/{conn_id}", dependencies=[Depends(require_reader)])
 def get_connection(conn_id: int):
     try:
@@ -461,7 +461,7 @@ def get_connection(conn_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Универсальное удаление соединения
+# Generic connection deletion
 @app.delete("/connections/{conn_id}", dependencies=[Depends(require_developer)],)
 def delete_connection(conn_id: int):
     try:
@@ -539,7 +539,7 @@ def split_preview_sql(user_sql: str):
     has_end = pre_hook_end in user_sql
 
     if has_start != has_end:
-        raise ValueError("Нужно указать оба маркера pre-hook")
+        raise ValueError("Both pre-hook markers must be specified")
 
     if not has_start:
         return None, user_sql.strip()
@@ -549,7 +549,7 @@ def split_preview_sql(user_sql: str):
     select_sql = (before_raw + after_raw).strip()
 
     if not select_sql:
-        raise ValueError("После pre-hook должен остаться SQL-запрос")
+        raise ValueError("An SQL query must remain after the pre-hook")
 
     return raw_part.strip(), select_sql
 
@@ -559,12 +559,12 @@ def preview_transformation_sql(payload: TransformationSqlPreviewPayload):
     if payload.connection_type != "postgres":
         raise HTTPException(
             status_code=400,
-            detail="SQL preview с pre-hook поддерживается только для PostgreSQL"
+            detail="SQL preview with pre-hook is supported only for PostgreSQL"
         )
 
     user_sql = (payload.sql or "").strip()
     if not user_sql:
-        raise HTTPException(status_code=400, detail="SQL-запрос пуст")
+        raise HTTPException(status_code=400, detail="SQL query is empty")
 
     try:
         pre_hook_sql, select_sql = split_preview_sql(user_sql)
@@ -620,7 +620,7 @@ def preview_transformation_sql(payload: TransformationSqlPreviewPayload):
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Ошибка выполнения SQL preview: {exc}")
+        raise HTTPException(status_code=400, detail=f"SQL preview execution error: {exc}")
 
 def test_postgres_connection(config: dict):
     secret = config.get("secret") or {}
@@ -632,10 +632,10 @@ def test_postgres_connection(config: dict):
     db_pass = secret.get("password") or config.get("password")
 
     if not db_name:
-        raise HTTPException(status_code=400, detail="Не указан dbname/database")
+        raise HTTPException(status_code=400, detail="dbname/database is not specified")
 
     if not db_user:
-        raise HTTPException(status_code=400, detail="Не указан user/username")
+        raise HTTPException(status_code=400, detail="user/username is not specified")
 
     try:
         with psycopg2.connect(
@@ -687,7 +687,7 @@ def test_connection(payload: ConnectionTestPayload):
     conn_type = payload.connection_type
 
     if not conn_type:
-        raise HTTPException(status_code=400, detail="Не указан type подключения")
+        raise HTTPException(status_code=400, detail="Connection type is not specified")
     if conn_type == "postgres":
         return test_postgres_connection(config)
     elif conn_type == "clickhouse":
@@ -695,7 +695,7 @@ def test_connection(payload: ConnectionTestPayload):
 
     raise HTTPException(
         status_code=400,
-        detail=f"Тест подключения для типа '{conn_type}' пока не поддержан"
+        detail=f"Connection testing for type '{conn_type}' is not supported yet"
     )
 
 def run_worker(object_type: str, object_id: int):
@@ -712,15 +712,15 @@ def run_worker(object_type: str, object_id: int):
         )
 
         if result.returncode != 0:
-            print(f"Ошибка в воркере для {object_type} {object_id}:")
+            print(f"Worker error for {object_type} {object_id}:")
             print(result.stderr)
             print(result.stdout)
         else:
-            print(f"{object_type} {object_id} успешно завершен:")
+            print(f"{object_type} {object_id} completed successfully:")
             print(result.stdout)
 
     except Exception as e:
-        print(f"Критическая ошибка запуска воркера: {e}")
+        print(f"Critical worker startup error: {e}")
 
 def check_chain_not_running(chain_id: int):
     with psycopg2.connect(DSN) as conn:
@@ -752,13 +752,13 @@ async def start_object(payload: dict, request: Request):
     if object_type not in ("flow", "chain"):
         raise HTTPException(
             status_code=400,
-            detail="object_type должен быть 'flow' или 'chain'"
+            detail="object_type must be 'flow' or 'chain'"
         )
 
     if object_id is None:
         raise HTTPException(
             status_code=400,
-            detail="object_id не передан"
+            detail="object_id is not provided"
         )
 
     object_id = int(object_id)
@@ -779,7 +779,7 @@ async def start_object(payload: dict, request: Request):
             "type": "flow",
             "id": object_id,
             "celery_task_id": task.id,
-            "message": "Flow запущен через Celery"
+            "message": "Flow started via Celery"
         }
 
     if object_type == "chain":
@@ -802,7 +802,7 @@ async def start_object(payload: dict, request: Request):
             "id": object_id,
             "chain_run_id": started["chain_run_id"],
             "celery_result_id": started["celery_result_id"],
-            "message": "Chain запущен через Celery"
+            "message": "Chain started via Celery"
         }
 
 @app.get("/get_remote_data/{conn_id}/{table_name}", dependencies=[Depends(require_reader)])
@@ -828,7 +828,7 @@ def get_remote_data(conn_id: int, table_name: str, request: Request):
         db_pass = secret.get("password") or config.get("password")
 
         if not db_name:
-            raise HTTPException(status_code=500, detail="Ключ 'dbname' или 'database' не найден в конфиге")
+            raise HTTPException(status_code=500, detail="Key 'dbname' or 'database' not found in config")
 
         remote_dsn = f"host={db_host} dbname={db_name} user={db_user} password={db_pass} port={db_port}"
 
@@ -865,7 +865,7 @@ def get_remote_data(conn_id: int, table_name: str, request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ошибка подключения: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Connection error: {str(e)}")
 
 @app.get("/process-chains", dependencies=[Depends(require_reader)])
 def list_process_chains():
@@ -901,10 +901,10 @@ def create_process_chain(payload: dict, request: Request):
     data = payload.get("data")
 
     if not name:
-        raise HTTPException(status_code=400, detail="name не передан")
+        raise HTTPException(status_code=400, detail="name is not provided")
 
     if data is None:
-        raise HTTPException(status_code=400, detail="data не передан")
+        raise HTTPException(status_code=400, detail="data is not provided")
 
     try:
         with psycopg2.connect(DSN) as conn:
@@ -950,7 +950,7 @@ def update_process_chain(chain_id: int, payload: dict, request: Request):
     data = payload.get("data")
 
     if data is None:
-        raise HTTPException(status_code=400, detail="data не передан")
+        raise HTTPException(status_code=400, detail="data is not provided")
 
     try:
         with psycopg2.connect(DSN) as conn:
@@ -1034,12 +1034,12 @@ class ChainSchedulePayload(BaseModel):
 
 def calc_next_run_at(cron_expr: str, timezone_str: str):
     if not croniter.is_valid(cron_expr):
-        raise HTTPException(status_code=400, detail="Некорректное cron выражение")
+        raise HTTPException(status_code=400, detail="Invalid cron expression")
 
     try:
         tz = pytz.timezone(timezone_str)
     except Exception:
-        raise HTTPException(status_code=400, detail="Некорректный timezone")
+        raise HTTPException(status_code=400, detail="Invalid timezone")
 
     now = datetime.now(tz)
     return croniter(cron_expr, now).get_next(datetime)
@@ -1124,7 +1124,7 @@ def enable_process_chain_schedule(chain_id: int, request: Request):
                 schedule = cur.fetchone()
 
                 if not schedule:
-                    raise HTTPException(status_code=404, detail="Cron schedule не настроен")
+                    raise HTTPException(status_code=404, detail="Cron schedule is not configured")
                 
                 app_user_id = get_or_create_app_user_id(request, cur)
 
@@ -1170,7 +1170,7 @@ def pause_process_chain_schedule(chain_id: int, request: Request):
                 row = cur.fetchone()
 
                 if not row:
-                    raise HTTPException(status_code=404, detail="Cron schedule не настроен")
+                    raise HTTPException(status_code=404, detail="Cron schedule is not configured")
 
                 conn.commit()
                 row["configured"] = True
@@ -1236,7 +1236,7 @@ def save_user_settings(payload: dict, request: Request):
     if locale_code not in ("en", "ru"):
         raise HTTPException(
             status_code=400,
-            detail="locale_code должен быть 'en' или 'ru'"
+            detail="locale_code must be 'en' or 'ru'"
         )
 
     try:
@@ -1274,7 +1274,7 @@ def save_user_settings(payload: dict, request: Request):
 # @app.get("/get_chain_matrix2/{conn_id}/{chain_id}", dependencies=[Depends(require_reader)])
 # def get_chain_matrix2(conn_id: int, chain_id: int):
 #     try:
-#         # 1. Берем JSON цепочки и config подключения из meta-БД
+#         # 1. Get the chain JSON and connection config from the meta DB
 #         with psycopg2.connect(DSN) as main_conn:
 #             with main_conn.cursor(cursor_factory=RealDictCursor) as cur:
 #                 cur.execute(
@@ -1300,7 +1300,7 @@ def save_user_settings(payload: dict, request: Request):
 #                 config = conn_row["config"]
 #                 secret = decrypt_secret(conn_row.get("secret") or {})
 
-#         # 2. Вытаскиваем flow_id из nodes цепочки
+#         # 2. Extract flow_id from the chain nodes
 #         nodes = chain_data.get("nodes", [])
 
 #         flow_ids = []
@@ -1314,7 +1314,7 @@ def save_user_settings(payload: dict, request: Request):
 #         if not flow_ids:
 #             return []
 
-#         # 3. Подключаемся к целевой БД
+#         # 3. Connect to the target DB
 #         db_name = config.get("dbname") or config.get("database")
 #         db_user = config.get("user") or config.get("username")
 #         db_host = config.get("host", "localhost")
@@ -1322,7 +1322,7 @@ def save_user_settings(payload: dict, request: Request):
 #         db_pass = secret.get("password") or config.get("password")
 
 #         if not db_name:
-#             raise HTTPException(status_code=500, detail="Ключ 'dbname' или 'database' не найден в конфиге")
+#             raise HTTPException(status_code=500, detail="Key 'dbname' or 'database' not found in config")
 
 #         remote_dsn = (
 #             f"host={db_host} "
@@ -1332,7 +1332,7 @@ def save_user_settings(payload: dict, request: Request):
 #             f"port={db_port}"
 #         )
 
-#         # 4. Читаем журнал по всей цепочке, без ограничения chain_run_id
+#         # 4. Read the journal for the entire chain, without a chain_run_id limit
 #         with psycopg2.connect(remote_dsn) as remote_conn:
 #             with remote_conn.cursor(cursor_factory=RealDictCursor) as cur:
 #                 cur.execute("""
@@ -1350,7 +1350,7 @@ def save_user_settings(payload: dict, request: Request):
 
 #                 journal_rows = cur.fetchall()
 
-#         # 5. Собираем матрицу
+#         # 5. Build the matrix
 #         matrix = {}
 
 #         for row in journal_rows:
@@ -1436,7 +1436,7 @@ def get_metadata_data(table_name: str, request: Request):
     if table_name not in allowed_sources:
         raise HTTPException(
             status_code=400,
-            detail="Недопустимая metadata table"
+            detail="Invalid metadata table"
         )
 
     try:
@@ -1932,7 +1932,7 @@ def get_lineage_objects(connection_id: int):
                     if not database:
                         raise HTTPException(
                             status_code=400,
-                            detail="Для ClickHouse connection не указан dbname/database"
+                            detail="dbname/database is not specified for the ClickHouse connection"
                         )
 
                     cur.execute("""
@@ -1959,7 +1959,7 @@ def get_lineage_objects(connection_id: int):
 
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Lineage objects для типа '{conn_type}' пока не поддержан"
+                    detail=f"Lineage objects for type '{conn_type}' are not supported yet"
                 )
 
     except HTTPException:
@@ -2128,7 +2128,7 @@ def split_target_name(target: str):
     parts = target.split(".")
 
     if len(parts) != 2 or not parts[0] or not parts[1]:
-        raise HTTPException(status_code=400, detail="target должен быть в формате schema.table")
+        raise HTTPException(status_code=400, detail="target must be in schema.table format")
 
     return parts[0], parts[1]
 
@@ -2151,7 +2151,7 @@ def get_target_pg_params(connection_id: int):
     conn_config = load_connection_config(connection_id)
 
     if conn_config.get("connection_type") != "postgres":
-        raise HTTPException(status_code=400, detail="Удаление пока поддержано только для postgres target")
+        raise HTTPException(status_code=400, detail="Deletion is currently supported only for postgres targets")
 
     return postgres_connection_params(conn_config)
 
@@ -2173,7 +2173,7 @@ def validate_top_requests(cur, connection_id: int, target: str, request_ids: Lis
     selected_ids = list(dict.fromkeys([str(x) for x in request_ids if x is not None]))
 
     if not selected_ids:
-        raise HTTPException(status_code=400, detail="Не выбраны request_ids")
+        raise HTTPException(status_code=400, detail="No request_ids selected")
 
     cur.execute(f"""
         with selected as (
@@ -2212,7 +2212,7 @@ def validate_top_requests(cur, connection_id: int, target: str, request_ids: Lis
         raise HTTPException(
             status_code=409,
             detail={
-                "message": "Можно удалять только самый верхний реквест или несколько верхних подряд",
+                "message": "Only the most recent request or several consecutive most recent requests can be deleted",
                 "selected_ids": row["selected_ids"],
                 "top_ids": row["top_ids"],
             }
@@ -2237,7 +2237,7 @@ def get_journal_rows_for_delete(cur, connection_id: int, target: str, request_id
     rows = cur.fetchall()
 
     if not rows:
-        raise HTTPException(status_code=404, detail="Реквесты не найдены в журнале")
+        raise HTTPException(status_code=404, detail="Requests not found in the journal")
 
     return rows
 
@@ -2246,7 +2246,7 @@ def build_watermark_conditions(add_info: dict):
 
     conditions = []
 
-    # вариант 1: один диапазон
+    # option 1: a single range
     if watermarks.get("column") and watermarks.get("from") and watermarks.get("to"):
         conditions.append({
             "column": watermarks["column"],
@@ -2254,7 +2254,7 @@ def build_watermark_conditions(add_info: dict):
             "to": watermarks["to"],
         })
 
-    # вариант 2: несколько диапазонов, если позже положишь массив в JSON
+    # option 2: multiple ranges, if you later put an array in JSON
     for item in watermarks.get("items") or []:
         if item.get("column") and item.get("from") and item.get("to"):
             conditions.append({
@@ -2378,7 +2378,7 @@ def delete_operations_requests(payload: DeleteRequestsPayload):
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Удаление для типа '{conn_type}' пока не поддержано"
+                detail=f"Deletion for type '{conn_type}' is not supported yet"
             )
 
         journal_deleted = delete_selected_from_journal(
@@ -2467,7 +2467,7 @@ def delete_operations_all(payload: DeleteAllPayload):
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Удаление для типа '{conn_type}' пока не поддержано"
+                detail=f"Deletion for type '{conn_type}' is not supported yet"
             )
 
         with meta_conn.cursor() as cur:
@@ -2717,7 +2717,7 @@ def set_chain_run_status(chain_run_id: int, payload: ChainRunSetStatusPayload):
     if new_status not in ("success", "error"):
         raise HTTPException(
             status_code=400,
-            detail="status должен быть success или error"
+            detail="status must be success or error"
         )
 
     comment = payload.error_text or f"Manually set to {new_status}"
@@ -2750,7 +2750,7 @@ def set_chain_run_status(chain_run_id: int, payload: ChainRunSetStatusPayload):
                 if chain_updated == 0 and flow_updated == 0:
                     raise HTTPException(
                         status_code=409,
-                        detail="Нет running chain/flow для изменения"
+                        detail="No running chain/flow to update"
                     )
 
                 conn.commit()
@@ -2772,7 +2772,7 @@ def set_chain_run_status(chain_run_id: int, payload: ChainRunSetStatusPayload):
 
 @app.get("/timezones")
 def get_timezones():
-    # Динамический вариант на будущее:
+    # Dynamic option for the future:
 #
 # @app.get("/timezones")
 # def get_timezones():
@@ -2797,10 +2797,10 @@ def clean_optional_string(value):
 
 def get_postgres_columns(conn_config: dict, schema_name: str, table_name: str):
     if not schema_name:
-        raise HTTPException(status_code=400, detail="Для Postgres не указан schema_name")
+        raise HTTPException(status_code=400, detail="schema_name is not specified for Postgres")
 
     if not table_name:
-        raise HTTPException(status_code=400, detail="Не указан table_name")
+        raise HTTPException(status_code=400, detail="table_name is not specified")
 
     allowed_keys = [
         "host", "port", "dbname", "database", "user", "password",
@@ -2830,7 +2830,7 @@ def get_postgres_columns(conn_config: dict, schema_name: str, table_name: str):
 
 def get_clickhouse_columns(conn_config: dict, schema_name: str, table_name: str):
     if not table_name:
-        raise HTTPException(status_code=400, detail="Не указан table_name")
+        raise HTTPException(status_code=400, detail="table_name is not specified")
 
     database = schema_name or conn_config.get("dbname") or conn_config.get("database")
 
@@ -2845,7 +2845,7 @@ def get_clickhouse_columns(conn_config: dict, schema_name: str, table_name: str)
     if not database:
         raise HTTPException(
             status_code=400,
-            detail="Для ClickHouse не указан database/schema_name"
+            detail="database/schema_name is not specified for ClickHouse"
         )
 
     ch_client = get_clickhouse_client(conn_config)
@@ -2941,7 +2941,7 @@ def get_connection_columns(conn_id: int, payload: ColumnsRequest):
 
         raise HTTPException(
             status_code=400,
-            detail=f"Columns loading для типа '{conn_type}' пока не поддержан"
+            detail=f"Columns loading for type '{conn_type}' is not supported yet"
         )
 
     except HTTPException:

@@ -53,7 +53,7 @@ def require_transfer_feature(variable_name: str, feature_name: str):
     if not feature_enabled(variable_name):
         raise HTTPException(
             status_code=403,
-            detail=f"{feature_name} пакетов отключен в настройках системы",
+            detail=f"{feature_name} is disabled in the system settings",
         )
 
 
@@ -79,7 +79,7 @@ def load_objects(cur, query: str, selected_ids: list[int], object_name: str):
     if missing_ids:
         raise HTTPException(
             status_code=404,
-            detail=f"{object_name} не найдены: {missing_ids}",
+            detail=f"{object_name} not found: {missing_ids}",
         )
 
     return rows
@@ -121,7 +121,7 @@ def validate_script_path(raw_path: str) -> str:
     ):
         raise HTTPException(
             status_code=400,
-            detail=f"Недопустимый путь файла: {raw_path}",
+            detail=f"Invalid file path: {raw_path}",
         )
 
     return path.as_posix()
@@ -143,19 +143,19 @@ def collect_python_files(
         try:
             file_path.relative_to(scripts_dir)
         except ValueError:
-            raise HTTPException(status_code=400, detail="Путь Python-файла выходит за пределы workspace")
+            raise HTTPException(status_code=400, detail="Python file path is outside the workspace")
 
         if not file_path.is_file():
             raise HTTPException(
                 status_code=400,
-                detail=f"Файл не найден: {relative_path}",
+                detail=f"File not found: {relative_path}",
             )
 
         content = file_path.read_bytes()
         if len(content) > MAX_PY_FILE_SIZE:
             raise HTTPException(
                 status_code=400,
-                detail=f"Файл слишком большой: {relative_path}",
+                detail=f"File is too large: {relative_path}",
             )
 
         files[relative_path] = content
@@ -213,13 +213,13 @@ def read_json_list(archive, filename):
     except (UnicodeDecodeError, json.JSONDecodeError):
         raise HTTPException(
             status_code=400,
-            detail=f"Некорректный {filename}",
+            detail=f"Invalid {filename}",
         )
 
     if not isinstance(data, list):
         raise HTTPException(
             status_code=400,
-            detail=f"{filename} должен содержать массив",
+            detail=f"{filename} must contain an array",
         )
 
     return data
@@ -239,13 +239,13 @@ def read_python_files(archive) -> dict[str, bytes]:
         if relative_path in files:
             raise HTTPException(
                 status_code=400,
-                detail=f"Дублирующийся файл: {relative_path}",
+                detail=f"Duplicate file: {relative_path}",
             )
 
         if member.is_dir() or member.file_size > MAX_PY_FILE_SIZE:
             raise HTTPException(
                 status_code=400,
-                detail=f"Некорректный файл: {relative_path}",
+                detail=f"Invalid file: {relative_path}",
             )
 
         files[relative_path] = archive.read(member)
@@ -264,7 +264,7 @@ def write_python_files(request: Request, files: dict[str, bytes]) -> None:
         except ValueError:
             raise HTTPException(
                 status_code=400,
-                detail=f"Путь Python-файла выходит за пределы workspace: {relative_path}",
+                detail=f"Python file path is outside the workspace: {relative_path}",
             )
 
         target_path.parent.mkdir(parents=True, exist_ok=True)
@@ -274,7 +274,7 @@ def write_python_files(request: Request, files: dict[str, bytes]) -> None:
 def export_package(payload: ExportPackageRequest, request: Request):
     require_transfer_feature(
         "BELT_TRANSFER_EXPORT_CREATION_ENABLED",
-        "Экспорт",
+        "Export",
     )
 
     if not (
@@ -285,7 +285,7 @@ def export_package(payload: ExportPackageRequest, request: Request):
     ):
         raise HTTPException(
             status_code=400,
-            detail="Не выбран ни один объект",
+            detail="No objects selected",
         )
 
     environment = os.getenv("BELT_ENVIRONMENT", "").strip().upper()
@@ -293,7 +293,7 @@ def export_package(payload: ExportPackageRequest, request: Request):
     if environment not in {"DEV", "TEST", "PROD"}:
         raise HTTPException(
             status_code=500,
-            detail="Некорректный BELT_ENVIRONMENT",
+            detail="Invalid BELT_ENVIRONMENT",
         )
 
     package_uuid = str(uuid.uuid4())
@@ -313,7 +313,7 @@ def export_package(payload: ExportPackageRequest, request: Request):
                 order by id
                 """,
                 payload.connection_ids,
-                "Подключения",
+                "Connections",
             )
 
             flows = load_objects(
@@ -325,7 +325,7 @@ def export_package(payload: ExportPackageRequest, request: Request):
                 order by id
                 """,
                 payload.flow_ids,
-                "Потоки",
+                "Flows",
             )
 
             chains = load_objects(
@@ -337,7 +337,7 @@ def export_package(payload: ExportPackageRequest, request: Request):
                 order by id
                 """,
                 payload.chain_ids,
-                "Цепочки",
+                "Chains",
             )
 
             python_files = collect_python_files(
@@ -419,7 +419,7 @@ def get_transfer_packages(
     if direction and direction not in visible_directions:
         raise HTTPException(
             status_code=403,
-            detail="Просмотр пакетов этого направления отключен",
+            detail="Viewing packages for this direction is disabled",
         )
 
     directions = [direction] if direction else visible_directions
@@ -477,7 +477,7 @@ def get_transfer_packages(
 def get_latest_import_package():
     require_transfer_feature(
         "BELT_TRANSFER_IMPORT_ENABLED",
-        "Импорт",
+        "Import",
     )
 
     with get_meta_conn() as conn:
@@ -522,7 +522,7 @@ def get_latest_import_package():
                 "error_message": package["error_message"],
             }
 
-            # Для validated/applied восстанавливаем количество объектов
+            # For validated/applied, restore the object count
             if package["status"] in ("validated"):
                 with zipfile.ZipFile(
                     io.BytesIO(bytes(package["file_data"]))
@@ -551,12 +551,12 @@ def get_latest_import_package():
 def export_from_import(package_id: int, request: Request):
     raise HTTPException(
         status_code=410,
-        detail="Создание export-копий из import-пакетов отключено",
+        detail="Creating export copies from import packages is disabled",
     )
 
     require_transfer_feature(
         "BELT_TRANSFER_EXPORT_CREATION_ENABLED",
-        "Экспорт",
+        "Export",
     )
 
     environment = os.getenv("BELT_ENVIRONMENT", "").strip().upper()
@@ -564,7 +564,7 @@ def export_from_import(package_id: int, request: Request):
     if environment not in {"DEV", "TEST", "PROD"}:
         raise HTTPException(
             status_code=500,
-            detail="Некорректный BELT_ENVIRONMENT",
+            detail="Invalid BELT_ENVIRONMENT",
         )
 
     with get_meta_conn() as conn:
@@ -593,19 +593,19 @@ def export_from_import(package_id: int, request: Request):
             if not package:
                 raise HTTPException(
                     status_code=404,
-                    detail="Пакет не найден",
+                    detail="Package not found",
                 )
 
             if package["direction"] != "import":
                 raise HTTPException(
                     status_code=409,
-                    detail="Экспортировать можно только импортный пакет",
+                    detail="Only an import package can be exported",
                 )
 
             if package["status"] != "applied":
                 raise HTTPException(
                     status_code=409,
-                    detail="Экспортировать можно только применённый пакет",
+                    detail="Only an applied package can be exported",
                 )
 
             cur.execute(
@@ -668,7 +668,7 @@ async def upload_package(
 ):
     require_transfer_feature(
         "BELT_TRANSFER_IMPORT_ENABLED",
-        "Импорт",
+        "Import",
     )
 
     file_data = await file.read()
@@ -676,7 +676,7 @@ async def upload_package(
     if len(file_data) > MAX_IMPORT_PACKAGE_SIZE:
         raise HTTPException(
             status_code=413,
-            detail="Размер импортируемого пакета не должен превышать 10 MiB",
+            detail="Imported package size must not exceed 10 MiB",
         )
 
     try:
@@ -684,7 +684,7 @@ async def upload_package(
             if "package.json" not in archive.namelist():
                 raise HTTPException(
                     status_code=400,
-                    detail="В архиве отсутствует package.json",
+                    detail="package.json is missing from the archive",
                 )
 
             package_info = json.loads(
@@ -693,12 +693,12 @@ async def upload_package(
     except zipfile.BadZipFile:
         raise HTTPException(
             status_code=400,
-            detail="Файл не является ZIP-архивом",
+            detail="File is not a ZIP archive",
         )
     except json.JSONDecodeError:
         raise HTTPException(
             status_code=400,
-            detail="Некорректный package.json",
+            detail="Invalid package.json",
         )
 
     try:
@@ -708,7 +708,7 @@ async def upload_package(
     except (KeyError, ValueError, TypeError):
         raise HTTPException(
             status_code=400,
-            detail="Некорректный package_uuid",
+            detail="Invalid package_uuid",
         )
 
     environment = os.getenv(
@@ -741,8 +741,8 @@ async def upload_package(
                 raise HTTPException(
                     status_code=409,
                     detail=(
-                        f"Сначала завершите или удалите пакет "
-                        f"№{active_package['id']}"
+                        f"Finish or delete package "
+                        f"#{active_package['id']} first"
                     ),
                 )
             
@@ -762,7 +762,7 @@ async def upload_package(
                 raise HTTPException(
                     status_code=409,
                     detail=(
-                        f"Пакет уже загружен: "
+                        f"Package already uploaded: "
                         f"id={existing['id']}"
                     ),
                 )
@@ -799,7 +799,7 @@ async def upload_package(
 def delete_import_package(package_id: int):
     require_transfer_feature(
         "BELT_TRANSFER_IMPORT_ENABLED",
-        "Импорт",
+        "Import",
     )
 
     with get_meta_conn() as conn:
@@ -819,13 +819,13 @@ def delete_import_package(package_id: int):
             if not package:
                 raise HTTPException(
                     status_code=404,
-                    detail="Пакет не найден",
+                    detail="Package not found",
                 )
 
             if package["status"] not in ("uploaded", "validated"):
                 raise HTTPException(
                     status_code=409,
-                    detail="Удалить можно только незавершённый импортный пакет",
+                    detail="Only an unfinished import package can be deleted",
                 )
 
             cur.execute(
@@ -845,7 +845,7 @@ def delete_import_package(package_id: int):
 def validate_package(package_id: int):
     require_transfer_feature(
         "BELT_TRANSFER_IMPORT_ENABLED",
-        "Импорт",
+        "Import",
     )
 
     with get_meta_conn() as conn:
@@ -870,13 +870,13 @@ def validate_package(package_id: int):
             if not package:
                 raise HTTPException(
                     status_code=404,
-                    detail="Пакет не найден",
+                    detail="Package not found",
                 )
 
             if package["status"] != "uploaded":
                 raise HTTPException(
                     status_code=409,
-                    detail="Проверить можно только загруженный пакет",
+                    detail="Only an uploaded package can be validated",
                 )
 
             try:
@@ -893,7 +893,7 @@ def validate_package(package_id: int):
                     ):
                         raise HTTPException(
                             status_code=400,
-                            detail="UUID архива не совпадает с UUID пакета",
+                            detail="Archive UUID does not match package UUID",
                         )
 
                     connections = read_json_list(
@@ -913,23 +913,23 @@ def validate_package(package_id: int):
             except zipfile.BadZipFile:
                 raise HTTPException(
                     status_code=400,
-                    detail="Некорректный ZIP",
+                    detail="Invalid ZIP",
                 )
             except KeyError:
                 raise HTTPException(
                     status_code=400,
-                    detail="В архиве отсутствует package.json",
+                    detail="package.json is missing from the archive",
                 )
             except json.JSONDecodeError:
                 raise HTTPException(
                     status_code=400,
-                    detail="Некорректный package.json",
+                    detail="Invalid package.json",
                 )
 
             if not connections and not flows and not chains and not python_files:
                 raise HTTPException(
                     status_code=400,
-                    detail="Пакет не содержит объектов",
+                    detail="Package contains no objects",
                 )
 
             missing_files = collect_script_paths([flows, chains]) - set(python_files)
@@ -937,7 +937,7 @@ def validate_package(package_id: int):
                 raise HTTPException(
                     status_code=400,
                     detail=(
-                        "В архиве отсутствуют Python-файлы: "
+                        "Python files are missing from the archive: "
                         f"{sorted(missing_files)}"
                     ),
                 )
@@ -969,7 +969,7 @@ def validate_package(package_id: int):
 def download_package(package_id: int):
     require_transfer_feature(
         "BELT_TRANSFER_EXPORT_ENABLED",
-        "Экспорт",
+        "Export",
     )
 
     with get_meta_conn() as conn:
@@ -994,7 +994,7 @@ def download_package(package_id: int):
             if not package:
                 raise HTTPException(
                     status_code=404,
-                    detail="Пакет не найден",
+                    detail="Package not found",
                 )
 
             environment = os.getenv("BELT_ENVIRONMENT", "").strip().upper()
@@ -1011,7 +1011,7 @@ def download_package(package_id: int):
             if not (is_export_ready or is_import_applied_downloadable):
                 raise HTTPException(
                     status_code=409,
-                    detail="Пакет нельзя скачать в текущем статусе",
+                    detail="Package cannot be downloaded in the current status",
                 )
 
     filename = (
@@ -1034,7 +1034,7 @@ def download_package(package_id: int):
 def confirm_download(package_id: int):
     require_transfer_feature(
         "BELT_TRANSFER_EXPORT_ENABLED",
-        "Экспорт",
+        "Export",
     )
 
     environment = os.getenv("BELT_ENVIRONMENT", "").strip().upper()
@@ -1067,7 +1067,7 @@ def confirm_download(package_id: int):
             if not package:
                 raise HTTPException(
                     status_code=409,
-                    detail="Подтвердить можно только готовый экспортный пакет",
+                    detail="Only a ready export package can be confirmed",
                 )
 
             return dict(package)
@@ -1077,7 +1077,7 @@ def confirm_download(package_id: int):
 def apply_package(package_id: int, request: Request):
     require_transfer_feature(
         "BELT_TRANSFER_IMPORT_ENABLED",
-        "Импорт",
+        "Import",
     )
 
     with get_meta_conn() as conn:
@@ -1105,13 +1105,13 @@ def apply_package(package_id: int, request: Request):
             if not package:
                 raise HTTPException(
                     status_code=404,
-                    detail="Пакет не найден",
+                    detail="Package not found",
                 )
 
             if package["status"] != "validated":
                 raise HTTPException(
                     status_code=409,
-                    detail="Сначала проверьте пакет",
+                    detail="Validate the package first",
                 )
 
             with zipfile.ZipFile(
@@ -1136,7 +1136,7 @@ def apply_package(package_id: int, request: Request):
                 raise HTTPException(
                     status_code=400,
                     detail=(
-                        "В архиве отсутствуют Python-файлы: "
+                        "Python files are missing from the archive: "
                         f"{sorted(missing_files)}"
                     ),
                 )

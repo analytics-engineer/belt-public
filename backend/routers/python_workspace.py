@@ -17,23 +17,23 @@ def get_python_scripts_dir(request: Request) -> Path:
 
 def validate_python_relative_path(raw_path: str) -> str:
     if not raw_path:
-        raise HTTPException(status_code=400, detail="Не указан путь файла")
+        raise HTTPException(status_code=400, detail="File path not specified")
 
     normalized = raw_path.strip().replace("\\", "/")
 
     if not normalized:
-        raise HTTPException(status_code=400, detail="Не указан путь файла")
+        raise HTTPException(status_code=400, detail="File path not specified")
 
     if ":" in normalized:
-        raise HTTPException(status_code=400, detail="Недопустимый символ ':' в пути")
+        raise HTTPException(status_code=400, detail="Invalid character ':' in path")
 
     path = PurePosixPath(normalized)
 
     if path.is_absolute():
-        raise HTTPException(status_code=400, detail="Путь должен быть относительным")
+        raise HTTPException(status_code=400, detail="Path must be relative")
 
     if any(part in ("", ".", "..") for part in path.parts):
-        raise HTTPException(status_code=400, detail="Недопустимый путь файла")
+        raise HTTPException(status_code=400, detail="Invalid file path")
 
     return path.as_posix()
 
@@ -44,7 +44,7 @@ def resolve_target_path(base_dir: Path, relative_path: str) -> Path:
     try:
         target_path.relative_to(base_dir)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Путь выходит за пределы python_scripts")
+        raise HTTPException(status_code=400, detail="Path is outside python_scripts")
 
     return target_path
 
@@ -82,7 +82,7 @@ async def upload_python_file(
     target_path = resolve_target_path(base_dir, safe_relative_path)
 
     if target_path.exists() and not overwrite:
-        raise HTTPException(status_code=409, detail="Файл уже существует")
+        raise HTTPException(status_code=409, detail="File already exists")
 
     target_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -99,7 +99,7 @@ async def upload_python_file(
 
             if written > MAX_PY_FILE_SIZE:
                 target_path.unlink(missing_ok=True)
-                raise HTTPException(status_code=400, detail="Файл слишком большой")
+                raise HTTPException(status_code=400, detail="File is too large")
 
             out.write(chunk)
 
@@ -117,7 +117,7 @@ def download_python_file(request: Request, path: str):
     file_path = resolve_target_path(base_dir, safe_relative_path)
 
     if not file_path.exists() or not file_path.is_file():
-        raise HTTPException(status_code=404, detail="Файл не найден")
+        raise HTTPException(status_code=404, detail="File not found")
 
     return FileResponse(
         path=file_path,
@@ -133,7 +133,7 @@ def delete_python_file(request: Request, path: str):
     file_path = resolve_target_path(base_dir, safe_relative_path)
 
     if not file_path.exists() or not file_path.is_file():
-        raise HTTPException(status_code=404, detail="Файл не найден")
+        raise HTTPException(status_code=404, detail="File not found")
 
     file_path.unlink()
 

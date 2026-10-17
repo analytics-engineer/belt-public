@@ -27,7 +27,7 @@ def run_parsed_flow(parsed_flow):
     if flow_type == "transformation":
         return run_transformation_flow(parsed_flow)
 
-    raise ValueError(f"Неизвестный flow_type: {flow_type}")
+    raise ValueError(f"Unknown flow_type: {flow_type}")
 
 def run_integration_flow(parsed_flow):
     source_type = parsed_flow["source_type"]
@@ -38,14 +38,14 @@ def run_integration_flow(parsed_flow):
     elif source_type == "python":
         from storage import python as source_storage
     else:
-        raise NotImplementedError(f"Источник {source_type} пока не реализован")
+        raise NotImplementedError(f"Source {source_type} is not implemented yet")
 
     if target_type == "postgres":
         from storage import postgres as target_storage
     elif target_type == "clickhouse":
         from storage import clickhouse as target_storage
     else:
-        raise NotImplementedError(f"Цель {target_type} пока не реализована")
+        raise NotImplementedError(f"Target {target_type} is not implemented yet")
 
     source_data = parsed_flow["source_data"]
     target_data = parsed_flow["target_data"]
@@ -136,5 +136,5 @@ def run_transformation_flow(parsed_flow):
         return clickhouse.run_transformation(parsed_flow)
 
     raise NotImplementedError(
-        f"Transformation для target_type={target_type} пока не реализован"
+        f"Transformation for target_type={target_type} is not implemented yet"
     )

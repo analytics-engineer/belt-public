@@ -100,7 +100,7 @@ def extract_from_pg(mode, src_conn, trg_conn, source_table, target_table, column
 
         if source_sql:
             if "{where_cond_source}" not in source_sql:
-                raise ValueError("Source SQL должен содержать плейсхолдер {where_cond_source}")
+                raise ValueError("Source SQL must contain the {where_cond_source} placeholder")
             
             rendered_source_sql = source_sql.replace(
                 "{where_cond_source}",
@@ -205,7 +205,7 @@ def get_last_dt(conn, target_table, date_column):
         )
         value = c.fetchone()[0]
    # print(value)
-    return value  # может быть None
+    return value  # may be None
 
 def get_first_dt(conn, target_table, date_column):
     with conn.cursor() as c:
@@ -214,7 +214,7 @@ def get_first_dt(conn, target_table, date_column):
         )
         value = c.fetchone()[0]
     #print(value)
-    return value  # может быть None
+    return value  # may be None
 
 def split_sql_hooks(user_sql, where_cond_source):
     pre_hook_start = "-- @pre_hook_start"
@@ -224,7 +224,7 @@ def split_sql_hooks(user_sql, where_cond_source):
     has_pre_hook_end = pre_hook_end in user_sql
 
     if has_pre_hook_start != has_pre_hook_end:
-        raise ValueError("Нужно указать оба маркера: -- @pre_hook_start -- @pre_hook_end")
+        raise ValueError("Both markers must be specified: -- @pre_hook_start -- @pre_hook_end")
 
     if not has_pre_hook_start:
         return None, user_sql.format(where_cond_source=where_cond_source)
@@ -236,7 +236,7 @@ def split_sql_hooks(user_sql, where_cond_source):
     select_sql = (before_raw + after_raw).strip().format(where_cond_source=where_cond_source)
 
     if not select_sql:
-        raise ValueError("После pre_hook должен остаться SELECT для загрузки в target")
+        raise ValueError("A SELECT for loading into target must remain after pre_hook")
 
     return raw_sql, select_sql
 
@@ -256,16 +256,16 @@ def flow(conn, source_table, target_table, source_table_in_jurnal,
 
     if bad_cols:
         raise ValueError(
-            "В поле Columns нельзя указывать технические поля: "
+            "Technical fields cannot be specified in the Columns field: "
             + ", ".join(bad_cols)
-            + ". Укажи только бизнес-колонки. "
-            + "tech_request_id и tech_batch_id добавляются системой автоматически."
+            + ". Specify only business columns. "
+            + "tech_request_id and tech_batch_id are added automatically by the system."
         )
 
     business_cols = [c.strip().replace('"', "") for c in columns if c.strip()]
 
     if not business_cols:
-        raise ValueError("Для transformation нужно указать бизнес-колонки в target Columns")
+        raise ValueError("Business columns must be specified in target Columns for transformation")
 
     use_on_conflict = (pg_version > 10) and bool(keys)
     clean_keys = [k.strip().replace('"', "") for k in keys if k.strip()]

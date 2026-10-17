@@ -100,7 +100,7 @@ const SqlEditor = ({ value, onChange, connectionType, height = '340px', label })
         <button
           type="button"
           className="belt-icon-button"
-          title={isFullscreen ? 'Свернуть' : 'На весь экран'}
+          title={isFullscreen ? 'Collapse' : 'Fullscreen'}
           onClick={() => setIsFullscreen((prev) => !prev)}
           style={{ fontSize: '16px', color: 'var(--text-muted)' }}
         >

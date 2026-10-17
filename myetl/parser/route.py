@@ -4,7 +4,7 @@ import io
 import traceback
 from contextlib import redirect_stdout, redirect_stderr
 
-# Чтобы Python видел пакет myetl, если parser лежит внутри myetl/parser
+# So that Python can see the myetl package if parser is located inside myetl/parser
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 
@@ -127,7 +127,7 @@ def run_chain(chain_id, started_by=None):
         ]
 
         if not start_nodes:
-            raise ValueError("В process chain не найдена стартовая нода")
+            raise ValueError("Start node not found in process chain")
 
         current_node_id = start_nodes[0]
 
@@ -136,9 +136,9 @@ def run_chain(chain_id, started_by=None):
             flow_id = node.get("data", {}).get("flow_id")
 
             if not flow_id:
-                raise ValueError(f"В ноде {current_node_id} не найден flow_id")
+                raise ValueError(f"flow_id not found in node {current_node_id}")
 
-            print(f"Запускаю flow_id={flow_id}")
+            print(f"Running flow_id={flow_id}")
             result = run_flow(flow_id, chain_id=chain_id, chain_run_id=chain_run_id, started_by=started_by)
 
             if isinstance(result, dict) and result.get("status") == "blocked":
@@ -171,8 +171,8 @@ def run_chain(chain_id, started_by=None):
 
 def main():
     if len(sys.argv) < 3:
-        print("Ошибка: нужно передать тип и id")
-        print("Пример: python route.py flow 19, chain 1")
+        print("Error: type and id must be provided")
+        print("Example: python route.py flow 19, chain 1")
         sys.exit(1)
 
     object_type = sys.argv[1]
@@ -183,7 +183,7 @@ def main():
     elif object_type == "chain":
         run_chain(object_id)
     else:
-        raise ValueError(f"Пока поддерживается только flow, chain получено: {object_type}")
+        raise ValueError(f"Currently only flow and chain are supported, got: {object_type}")
 
 if __name__ == "__main__":
     main()

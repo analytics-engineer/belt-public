@@ -26,13 +26,13 @@ const NodeSettings = ({ activeTab, connections }) => {
     setNodeSettingsSqlPreview
   } = useStore();
 
-  // 1. Ищем родительский поток в сторе, а не в пропсах
+  // 1. Look for the parent flow in the store, not in props
   const parentFlow = tabs.find(t => t.id === activeTab.parentFlowId);
 
-  // 2. Ищем ноду внутри данных этого потока
+  // 2. Look for the node inside that flow's data
   const node = parentFlow?.data?.nodes?.find(n => n.id === activeTab.nodeId);
 
-  // 3. Локальный стейт для формы
+  // 3. Local state for the form
   const [formData, setFormData] = useState(node ? node.data : {});
   const [pythonFiles, setPythonFiles] = useState([]);
   const [pythonUploadFile, setPythonUploadFile] = useState(null);
@@ -56,7 +56,7 @@ const NodeSettings = ({ activeTab, connections }) => {
     setNodeSettingsSqlPreview(activeTab.id, patch);
   };
 
-  // Важно: если нода в сторе обновилась, синхронизируем локальный стейт
+  // Important: if the node in the store was updated, sync the local state
   useEffect(() => {
     if (node) {
       setFormData(node.data);
@@ -99,7 +99,7 @@ const NodeSettings = ({ activeTab, connections }) => {
 
   const handleApply = () => {
     updateNodeInFlow(activeTab.parentFlowId, activeTab.nodeId, formData);
-    alert("Сохранено в модель потока");
+    alert("Saved to the flow model");
   };
 
   const handlePreviewSql = async () => {
@@ -107,17 +107,17 @@ const NodeSettings = ({ activeTab, connections }) => {
 
     const connectionId = transformOutputNode?.data?.connection_id;
     if (!connectionId) {
-      updateSqlPreview({ error: 'Для transformation не выбрано целевое подключение' });
+      updateSqlPreview({ error: 'No target connection selected for transformation' });
       return;
     }
 
     if (transformSqlDialect !== 'postgres') {
-      updateSqlPreview({ error: 'SQL preview с pre-hook пока поддерживается только для PostgreSQL' });
+      updateSqlPreview({ error: 'SQL preview with pre-hook is currently supported only for PostgreSQL' });
       return;
     }
 
     if (!String(formData.sql || '').trim()) {
-      updateSqlPreview({ error: 'SQL-запрос пуст' });
+      updateSqlPreview({ error: 'SQL query is empty' });
       return;
     }
 
@@ -141,7 +141,7 @@ const NodeSettings = ({ activeTab, connections }) => {
 
       updateSqlPreview({ rows: Array.isArray(result.rows) ? result.rows : [] });
     } catch (error) {
-      updateSqlPreview({ rows: [], error: error.message || 'Ошибка выполнения SQL preview' });
+      updateSqlPreview({ rows: [], error: error.message || 'SQL preview execution error' });
     } finally {
       updateSqlPreview({ loading: false });
     }
@@ -167,7 +167,7 @@ const NodeSettings = ({ activeTab, connections }) => {
     }
 
     if (!pythonUploadPath) {
-      alert("Input save path, например api_sources/test_source.py");
+      alert("Input save path, for example api_sources/test_source.py");
       return;
     }
 
@@ -192,7 +192,7 @@ const NodeSettings = ({ activeTab, connections }) => {
       let data = await res.json();
 
       if (res.status === 409) {
-        const ok = window.confirm("Файл уже существует. Перезаписать?");
+        const ok = window.confirm("File already exists. Overwrite?");
         if (!ok) return;
 
         res = await upload(true);
@@ -393,7 +393,7 @@ const NodeSettings = ({ activeTab, connections }) => {
     }
 
     const ok = window.confirm(
-      `Удалить файл?\n\n${formData.script_path}\n\nЕсли он используется в flow, запуск потом упадёт.`
+      `Delete file?\n\n${formData.script_path}\n\nIf it is used in a flow, the run will fail.`
     );
 
     if (!ok) return;

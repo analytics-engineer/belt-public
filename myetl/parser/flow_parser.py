@@ -9,7 +9,7 @@ def parse_flow(flow_json: dict) -> dict:
     if flow_type == "transformation":
         return parse_transformation_flow(flow_json)
 
-    raise ValueError(f"Неизвестный flow_type: {flow_type}")
+    raise ValueError(f"Unknown flow_type: {flow_type}")
 
 def build_target_name(target_type, target_data, target_conn):
     table_name = target_data.get("target_table") or target_data.get("table_name")
@@ -17,7 +17,7 @@ def build_target_name(target_type, target_data, target_conn):
     if target_type == "postgres":
         schema_name = target_data.get("schema_name")
         if not schema_name or not table_name:
-            raise ValueError("Для postgres target нужны schema_name и target_table")
+            raise ValueError("Postgres target requires schema_name and target_table")
         return f"{schema_name}.{table_name}"
 
     if target_type == "clickhouse":
@@ -28,10 +28,10 @@ def build_target_name(target_type, target_data, target_conn):
             or target_conn.get("database")
         )
         if not database or not table_name:
-            raise ValueError("Для clickhouse target нужны database/dbname и target_table")
+            raise ValueError("ClickHouse target requires database/dbname and target_table")
         return f"{database}.{table_name}"
 
-    raise ValueError(f"Неизвестный target_type: {target_type}")
+    raise ValueError(f"Unknown target_type: {target_type}")
 
 def build_source_name(source_type, source_data, source_conn):
     table_name = source_data.get("table_name") or source_data.get("target_table")
@@ -39,7 +39,7 @@ def build_source_name(source_type, source_data, source_conn):
     if source_type == "postgres":
         schema_name = source_data.get("schema_name")
         if not schema_name or not table_name:
-            raise ValueError("Для postgres source нужны schema_name и table_name")
+            raise ValueError("Postgres source requires schema_name and table_name")
         return f"{schema_name}.{table_name}"
 
     if source_type == "clickhouse":
@@ -50,17 +50,17 @@ def build_source_name(source_type, source_data, source_conn):
             or source_conn.get("database")
         )
         if not database or not table_name:
-            raise ValueError("Для clickhouse source нужны database/dbname и table_name")
+            raise ValueError("ClickHouse source requires database/dbname and table_name")
         return f"{database}.{table_name}"
 
-    raise ValueError(f"Неизвестный source_type: {source_type}")
+    raise ValueError(f"Unknown source_type: {source_type}")
 
 def parse_integration_flow(flow_json: dict) -> dict:
     edges = flow_json.get("edges", [])
     nodes = flow_json.get("nodes", [])
 
     if len(edges) != 1:
-        raise ValueError("Для integration сейчас должна быть одна связь source -> target")
+        raise ValueError("Integration currently requires a single source -> target connection")
 
     edge = edges[0]
 
@@ -71,10 +71,10 @@ def parse_integration_flow(flow_json: dict) -> dict:
     target_node = next((node for node in nodes if node.get("id") == target_node_id), None)
 
     if not source_node:
-        raise ValueError(f"Source node не найдена: {source_node_id}")
+        raise ValueError(f"Source node not found: {source_node_id}")
 
     if not target_node:
-        raise ValueError(f"Target node не найдена: {target_node_id}")
+        raise ValueError(f"Target node not found: {target_node_id}")
 
     source_data = source_node.get("data", {})
     target_data = target_node.get("data", {})
@@ -90,14 +90,14 @@ def parse_integration_flow(flow_json: dict) -> dict:
     elif source_type == "python":
         source_name = source_data.get("script_path")
         if not source_name:
-            raise ValueError("Для python source не указан script_path")
+            raise ValueError("script_path is not specified for python source")
     else:
-        raise ValueError(f"Неизвестный source_type: {source_type}")
+        raise ValueError(f"Unknown source_type: {source_type}")
 
     mode = source_data.get("mode", "full")
 
     if mode not in ("full", "delta"):
-        raise ValueError(f"Неизвестный mode: {mode}")
+        raise ValueError(f"Unknown mode: {mode}")
     
     target_name = build_target_name(target_type, target_data, target_conn)
 
@@ -119,7 +119,7 @@ def parse_integration_flow(flow_json: dict) -> dict:
         "target_connection_id": int(target_data["connection_id"]),
         "target_connection_type": target_type,
 
-        # mode только из source node
+        # mode comes only from the source node
         "mode": mode,
     }
 
@@ -132,13 +132,13 @@ def parse_transformation_flow(flow_json: dict) -> dict:
     target_node = next((node for node in nodes if node.get("type") == "output"), None)
 
     if not source_node:
-        raise ValueError("Для transformation не найдена source node type=input")
+        raise ValueError("Source node type=input not found for transformation")
 
     if not transform_node:
-        raise ValueError("Для transformation не найдена transform node type=default")
+        raise ValueError("Transform node type=default not found for transformation")
 
     if not target_node:
-        raise ValueError("Для transformation не найдена target node type=output")
+        raise ValueError("Target node type=output not found for transformation")
 
     source_id = source_node["id"]
     transform_id = transform_node["id"]
@@ -155,10 +155,10 @@ def parse_transformation_flow(flow_json: dict) -> dict:
     )
 
     if not has_source_to_transform:
-        raise ValueError("Для transformation нет связи source -> transform")
+        raise ValueError("No source -> transform connection for transformation")
 
     if not has_transform_to_target:
-        raise ValueError("Для transformation нет связи transform -> target")
+        raise ValueError("No transform -> target connection for transformation")
 
     source_data = source_node.get("data", {})
     transform_data = transform_node.get("data", {})
@@ -176,7 +176,7 @@ def parse_transformation_flow(flow_json: dict) -> dict:
     mode = source_data.get("mode", "full")
 
     if mode not in ("full", "delta"):
-        raise ValueError(f"Неизвестный mode: {mode}")
+        raise ValueError(f"Unknown mode: {mode}")
 
     return {
         "flow_type": "transformation",
@@ -197,6 +197,6 @@ def parse_transformation_flow(flow_json: dict) -> dict:
         "target_connection_id": int(target_data["connection_id"]),
         "target_connection_type": target_type,
 
-        # mode только из source node
+        # mode comes only from the source node
         "mode": mode,
     }

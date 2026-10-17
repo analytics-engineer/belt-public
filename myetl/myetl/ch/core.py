@@ -100,7 +100,7 @@ def clear_ch_table(trg_ch_client, table_name):
 #                     trg_ch_client.raw_insert(table=target_table, column_names=ch_columns, 
 #                                             insert_block=buf, fmt='TSV')
                     
-#                     # Получаем точное кол-во вставленных строк
+#                     # Get the exact number of inserted rows
 #                     res = trg_ch_client.query(
 #                         f"SELECT count() FROM {target_table} WHERE tech_request_id = %s AND tech_batch_id = %s",
 #                         parameters=(request_id, b_idx)
@@ -126,7 +126,7 @@ def clear_ch_table(trg_ch_client, table_name):
 #             rows_count=rows_count,
 #             text_error=error_msg
 #         )
-#         if status == "fail": raise # Останавливаем ETL при ошибке
+#         if status == "fail": raise # Stop ETL on error
 
 # def run_bronze_load(mode, src_conn, trg_conn, source_table, target_table, journal_table,
 #     columns=None, columns_excl=None, batches=None, timezone="UTC"):
@@ -151,14 +151,14 @@ def clear_ch_table(trg_ch_client, table_name):
 
 def bronze_to_ch(client, source_table, target_table, buf, columns, 
                  batch_id, cond, request_id, start_at, journal_table, now):
-    """ПРИЕМНИК: Твой рабочий метод raw_insert с поддержкой дельты."""
+    """TARGET: Your working raw_insert method with delta support."""
     if not buf: return
 
-    # ClickHouse ожидает список имен колонок (основные + технические)
+    # ClickHouse expects a list of column names (business + technical)
     ch_columns = list(columns) + ["tech_request_id", "tech_batch_id"]
     
     try:
-        # 1. Загрузка данных (твой оригинальный быстрый метод)
+        # 1. Loading data (your original fast method)
         client.raw_insert(
             table=target_table, 
             column_names=ch_columns, 
@@ -166,15 +166,15 @@ def bronze_to_ch(client, source_table, target_table, buf, columns,
             fmt='TSV'
         )
         
-        # 2. Точный подсчет вставленных строк через запрос к таблице
-        # Используем f-строку для фильтрации по тех-полям
+        # 2. Exact count of inserted rows via a table query
+        # Use an f-string to filter by technical fields
         res = client.query(
             f"SELECT count() FROM {target_table} WHERE tech_request_id = '{request_id}' AND tech_batch_id = {batch_id}"
         )
         rows_count = res.result_rows[0][0]
         
-        # 3. Твой ЭТАЛОННЫЙ add_journal
-        # Передаем cond в "batch", чтобы дельта работала
+        # 3. Your REFERENCE add_journal
+        # Pass cond to "batch" so delta works
         add_journal(
             client=client,
             journal_table=journal_table,
@@ -193,7 +193,7 @@ def bronze_to_ch(client, source_table, target_table, buf, columns,
         )
 
     except Exception as e:
-        # Логируем ошибку
+        # Log the error
         add_journal(
             client=client,
             journal_table=journal_table,
@@ -214,13 +214,13 @@ def bronze_to_ch(client, source_table, target_table, buf, columns,
 
 def bronze_from_ch(ch_client, trg_conn, source_table, target_table, columns, 
                    batch_id, batch_cond, request_id, start_at, journal_table, now):
-    """ДОНОР: Извлекает батч из ClickHouse через raw_query."""
+    """SOURCE: Extracts a batch from ClickHouse via raw_query."""
     cols_str = ",".join(columns) 
     buf = io.BytesIO()
     
     try:
-        # Формируем запрос
-        # ВАЖНО: FORMAT TabSeparated должен быть в конце
+        # Build the query
+        # IMPORTANT: FORMAT TabSeparated must be at the end
         query = f"""
             SELECT 
                 {cols_str}, 
@@ -231,7 +231,7 @@ def bronze_from_ch(ch_client, trg_conn, source_table, target_table, columns,
             FORMAT TabSeparated
         """
         
-        # Используем raw_query — он возвращает именно BYTES
+        # Use raw_query — it returns BYTES
         raw_data = ch_client.raw_query(query)
         
         if raw_data:
@@ -244,7 +244,7 @@ def bronze_from_ch(ch_client, trg_conn, source_table, target_table, columns,
 
     except Exception as e:
         end_at = now()
-        # Логируем ошибку в Postgres
+        # Log the error to Postgres
         add_journal(trg_conn, journal_table, "delta", {"batch": batch_cond}, source_table, target_table,
                     start_at, end_at, "fail", None, request_id, batch_id, 0, str(e))
         raise
