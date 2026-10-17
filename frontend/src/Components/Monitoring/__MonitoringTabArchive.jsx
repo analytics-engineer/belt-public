@@ -232,7 +232,7 @@ export default function MonitoringTab({ API_URL, activeTab, addTab, setActiveTab
     const chainId = row.id || row.chain_id;
 
     if (!chainId) {
-      return alert('Не найден chain_id');
+      return alert('chain_id not found');
     }
 
     const tabId = `journal-chain-${chainId}-runs`;
@@ -257,7 +257,7 @@ export default function MonitoringTab({ API_URL, activeTab, addTab, setActiveTab
     const chainId = row.id || row.chain_id;
 
     if (!chainId) {
-      return alert('Не найден chain_id');
+      return alert('chain_id not found');
     }
 
     const tabId = `journal-chain-${chainId}-matrix`;
@@ -279,7 +279,7 @@ export default function MonitoringTab({ API_URL, activeTab, addTab, setActiveTab
     const chainRunId = row.chain_run_id;
 
     if (!chainRunId) {
-      return alert('Не найден chain_run_id');
+      return alert('chain_run_id not found');
     }
 
     const hasRunning =
@@ -287,7 +287,7 @@ export default function MonitoringTab({ API_URL, activeTab, addTab, setActiveTab
       Object.keys(row).some((key) => key.startsWith('flow_') && row[key] === 'running');
 
     if (!hasRunning) {
-      return alert(`Нельзя изменить статус этого запуска.\n\nВ строке нет chain или flow со статусом running.\n`);
+      return alert(`Cannot change the status of this run.\n\nThere is no chain or flow with status running in the row.\n`);
     }
 
     const ok = window.confirm(
@@ -313,7 +313,7 @@ export default function MonitoringTab({ API_URL, activeTab, addTab, setActiveTab
     const chainId = row.chain_id || activeTab?.chainId;
 
     if (!chainRunId) {
-      return alert('Не найден chain_run_id');
+      return alert('chain_run_id not found');
     }
 
     const tabId = `journal-chain-run-${chainRunId}-flows`;
@@ -342,7 +342,7 @@ export default function MonitoringTab({ API_URL, activeTab, addTab, setActiveTab
     const flowRunId = row.flow_run_id || row.id;
 
     if (!chainRunId || !flowId || !flowRunId) {
-      return alert('Не найден chain_run_id, flow_id или flow_run_id');
+      return alert('chain_run_id, flow_id, or flow_run_id not found');
     }
 
     const tabId = `journal-chain-run-${chainRunId}-flow-run-${flowRunId}-batches`;

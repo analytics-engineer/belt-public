@@ -208,7 +208,7 @@ const useStore = create((set, get) => ({
     activeTabId: newTab.id
   })),
 
-  // --- ЭТО ДОБАВИЛИ ДЛЯ ОПЕРАЦИЙ ---
+  // --- THIS WAS ADDED FOR OPERATIONS ---
   connectionsList: [],
   setConnectionsList: (data) => set({ connectionsList: data }),
   objectsList: [],
@@ -444,7 +444,7 @@ const useStore = create((set, get) => ({
 }));
 
 
-// Удалить на продуктиве
+// Remove in production
 if (window) {
   window.store = useStore;
 }

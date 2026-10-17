@@ -11,19 +11,19 @@ USER_WORKSPACE_DIR = (PROJECT_ROOT / "user_workspace/python_scripts").resolve()
 
 def resolve_user_script_path(script_path):
     if not script_path:
-        raise ValueError("Для Python source не указан script_path")
+        raise ValueError("script_path is not specified for Python source")
 
     path = Path(script_path)
 
     if path.is_absolute():
-        raise ValueError("script_path должен быть относительным путём внутри user_workspace")
+        raise ValueError("script_path must be a relative path inside user_workspace")
 
     full_path = (USER_WORKSPACE_DIR / path).resolve()
 
     try:
         full_path.relative_to(USER_WORKSPACE_DIR)
     except ValueError:
-        raise ValueError("script_path выходит за пределы user_workspace")
+        raise ValueError("script_path is outside user_workspace")
 
     if not full_path.is_file():
         raise ValueError(f"Python source script not found: {full_path}")
@@ -75,7 +75,7 @@ def add_grain(dt, grain):
     if grain == "year":
         return dt.replace(year=dt.year + 1, month=1, day=1)
 
-    raise ValueError(f"Неизвестный delta_batch_grain: {grain}")
+    raise ValueError(f"Unknown delta_batch_grain: {grain}")
 
 
 def format_watermark(dt, delta_column_type=None):
@@ -106,7 +106,7 @@ def add_date_grain(d, grain):
     if grain == "year":
         return d.replace(year=d.year + 1, month=1, day=1)
 
-    raise ValueError(f"Для date delta поддерживается day/month/year, получено: {grain}")
+    raise ValueError(f"For date delta, day/month/year are supported, got: {grain}")
 
 def get_last_success_watermark_to(conn, journal_table, source_name, target_table, mode, delta_column_type):
     if delta_column_type == "date":
@@ -181,7 +181,7 @@ def build_date_delta_batches(source_data, last_to, now):
     safety_seconds = int(source_data.get("safety_seconds") or 0)
 
     if grain == "hour":
-        raise ValueError("Для date delta нельзя использовать grain=hour")
+        raise ValueError("grain=hour cannot be used for date delta")
 
     if last_to:
         start_dt = datetime.combine(parse_date_value(last_to), datetime.min.time())
@@ -230,13 +230,13 @@ def build_delta_batches(parsed_flow, request_id, now):
     delta_start = source_data.get("delta_start")
 
     if not delta_column:
-        raise ValueError("Для python delta не указан delta_column")
+        raise ValueError("delta_column is not specified for python delta")
 
     if delta_start in (None, ""):
-        raise ValueError("Для python delta не указан delta_start")
+        raise ValueError("delta_start is not specified for python delta")
 
     if delta_column_type not in ("timestamp", "date"):
-        raise ValueError(f"Для python delta поддерживается только timestamp/date, получено: {delta_column_type}")
+        raise ValueError(f"Only timestamp/date are supported for python delta, got: {delta_column_type}")
 
     with get_journal_conn() as conn:
         last_to = get_last_success_watermark_to(
@@ -268,7 +268,7 @@ def build_batches(parsed_flow, request_id, now):
     if mode == "delta":
         return build_delta_batches(parsed_flow, request_id, now)
 
-    raise ValueError(f"Неизвестный mode для Python source: {mode}")
+    raise ValueError(f"Unknown mode for Python source: {mode}")
 
 def load_python_function(script_path, function_name):
     path = resolve_user_script_path(script_path)
@@ -358,12 +358,12 @@ def extract_batch(parsed_flow, batch, source_resource, target_resource,
     params = parse_params(source_data.get("params"))
 
     if not script_path:
-        raise ValueError("Для Python source не указан script_path")
+        raise ValueError("script_path is not specified for Python source")
 
     columns = parse_columns(source_data.get("columns", ""))
 
     if not columns:
-        raise ValueError("Для Python source нужно указать columns")
+        raise ValueError("columns must be specified for Python source")
 
     func = load_python_function(script_path, function_name)
 

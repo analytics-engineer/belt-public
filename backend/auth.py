@@ -164,7 +164,7 @@ def authorize_request(
             detail="Authenticated user is missing",
         )
 
-    # Сохраняем действующий локальный режим разработки без Keycloak.
+    # Preserve the existing local development mode without Keycloak.
     if not verifier.required and not verifier.enabled:
         return user
 

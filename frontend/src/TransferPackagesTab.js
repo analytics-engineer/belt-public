@@ -74,7 +74,7 @@ export default function TransferPackagesTab({
         setTransferFeatures(data);
       } catch (error) {
         setPackagesError(
-          `Ошибка получения настроек пакетов: ${error.message}`
+          `Error loading package settings: ${error.message}`
         );
       }
     };
@@ -102,7 +102,7 @@ export default function TransferPackagesTab({
       setPackageTotal(data.total);
     } catch (error) {
       setPackagesError(
-        `Ошибка получения пакетов: ${error.message}`
+        `Error loading packages: ${error.message}`
       );
     } finally {
       setLoadingPackages(false);
@@ -172,7 +172,7 @@ export default function TransferPackagesTab({
         setPythonFiles(data);
       } catch (error) {
         setPackagesError(
-          `Ошибка получения Python-файлов: ${error.message}`
+          `Error loading Python files: ${error.message}`
         );
         return;
       }
@@ -247,7 +247,7 @@ export default function TransferPackagesTab({
       await loadPackages(1);
       setPackagePage(1);
     } catch (error) {
-      setExportError(`Ошибка: ${error.message}`);
+      setExportError(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -298,7 +298,7 @@ export default function TransferPackagesTab({
         window.URL.revokeObjectURL(url);
       }, 1000);
     } catch (error) {
-      setPackageActionError(`Ошибка скачивания: ${error.message}`);
+      setPackageActionError(`Download error: ${error.message}`);
     }
   };
 
@@ -306,7 +306,7 @@ export default function TransferPackagesTab({
     if (!importFile) return;
 
     if (importFile.size > 10 * 1024 * 1024) {
-      setImportError('Размер импортируемого пакета не должен превышать 10 MiB');
+      setImportError('Imported package size must not exceed 10 MiB');
       return;
     }
 
@@ -337,7 +337,7 @@ export default function TransferPackagesTab({
       await loadPackages(1);
       setPackagePage(1);
     } catch (error) {
-      setImportError(`Ошибка загрузки: ${error.message}`);
+      setImportError(`Upload error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -411,7 +411,7 @@ export default function TransferPackagesTab({
       await loadPackages(1);
       setPackagePage(1);
     } catch (error) {
-      setPackageActionError(`Ошибка экспорта: ${error.message}`);
+      setPackageActionError(`Export error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -440,7 +440,7 @@ export default function TransferPackagesTab({
       });
       await loadPackages(1);
     } catch (error) {
-      setImportError(`Ошибка проверки: ${error.message}`);
+      setImportError(`Validation error: ${error.message}`);
     } finally {
       setValidating(false);
     }
@@ -479,7 +479,7 @@ export default function TransferPackagesTab({
       });
       await loadPackages(1);
     } catch (error) {
-      setImportError(`Ошибка применения: ${error.message}`);
+      setImportError(`Error applying: ${error.message}`);
     } finally {
       setApplying(false);
     }
@@ -516,7 +516,7 @@ export default function TransferPackagesTab({
         fileInputRef.current.value = '';
       }
     } catch (error) {
-      setImportError(`Ошибка удаления: ${error.message}`);
+      setImportError(`Deletion error: ${error.message}`);
     } finally {
       setDeleting(false);
     }
@@ -549,7 +549,7 @@ export default function TransferPackagesTab({
         });
       } catch (error) {
         setImportError(
-          `Ошибка получения состояния импорта: ${error.message}`
+          `Error loading import state: ${error.message}`
         );
       } finally {
         setLoadingImportState(false);
@@ -713,7 +713,7 @@ export default function TransferPackagesTab({
 
                 {uploadedPackage && (
                   <div style={{ marginTop: '20px' }}>
-                    Пакет: {uploadedPackage.package_uuid};   ID: {uploadedPackage.id};
+                    Package: {uploadedPackage.package_uuid};   ID: {uploadedPackage.id};
                   </div>
                 )}
 

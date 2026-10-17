@@ -40,7 +40,7 @@ def load_flow(flow_id):
             row = cur.fetchone()
 
     if not row:
-        raise ValueError(f"Flow id={flow_id} не найден")
+        raise ValueError(f"Flow id={flow_id} not found")
 
     return row[0]
 
@@ -54,7 +54,7 @@ def load_connection_config(connection_id):
             row = cur.fetchone()
 
     if not row:
-        raise ValueError(f"Connection id={connection_id} не найден")
+        raise ValueError(f"Connection id={connection_id} not found")
 
     config = row[0] or {}
     secret = decrypt_secret(row[1] or {})
@@ -76,7 +76,7 @@ def load_connection_raw(connection_id):
             row = cur.fetchone()
 
     if not row:
-        raise ValueError(f"Connection id={connection_id} не найден")
+        raise ValueError(f"Connection id={connection_id} not found")
 
     return {
         "id": row[0],
@@ -102,7 +102,7 @@ def load_chain(chain_id):
     conn.close()
 
     if not row:
-        raise ValueError(f"Process chain id={chain_id} не найден")
+        raise ValueError(f"Process chain id={chain_id} not found")
 
     return {
         "data": row[0],
@@ -208,4 +208,3 @@ def assert_no_last_failed_batch(target_connection_id, target):
         f"Request ID: {row[3] or 'N/A'}. "
         f"Batch ID: {row[4] or 'N/A'}. "
     )
-

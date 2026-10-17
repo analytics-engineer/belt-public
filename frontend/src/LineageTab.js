@@ -22,7 +22,7 @@ export default function LineageTab({ API_URL, connections = [] }) {
     setLineageMode(mode);
 
     if (!connectionId || !objectName) {
-      alert('Укажи connection_id и object_name');
+      alert('Specify connection_id and object_name');
       return;
     }
 

@@ -37,14 +37,14 @@ def _result(engine, catalog, schema, table, table_type):
 
 def inspect_postgres(config, request):
     if not request.schema_name:
-        raise HTTPException(400, "Для PostgreSQL требуется schema_name")
+        raise HTTPException(400, "PostgreSQL requires schema_name")
     with closing(psycopg2.connect(**postgres_connection_params(config))) as conn:
         conn.set_session(readonly=True)
         with conn, conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("SELECT pg_catalog.current_database() AS name")
             database = cur.fetchone()["name"]
             if request.catalog_name and request.catalog_name != database:
-                raise HTTPException(400, "catalog_name не совпадает с базой подключения PostgreSQL")
+                raise HTTPException(400, "catalog_name does not match the PostgreSQL connection database")
             cur.execute("""
                 SELECT c.oid, c.relkind, c.relpersistence, c.reloptions,
                        pg_catalog.obj_description(c.oid, 'pg_class') AS comment,
@@ -57,7 +57,7 @@ def inspect_postgres(config, request):
             """, (request.schema_name, request.table_name))
             table = cur.fetchone()
             if not table:
-                raise HTTPException(404, "Объект PostgreSQL не найден")
+                raise HTTPException(404, "PostgreSQL object not found")
             oid = table["oid"]
             result = _result("postgres", database, request.schema_name,
                              request.table_name, {"r": "table", "p": "partitioned table",
@@ -131,11 +131,11 @@ def inspect_clickhouse(config, request):
     if "." in table_name:
         qualified_database, table_name = table_name.split(".", 1)
         if not qualified_database or not table_name:
-            raise HTTPException(400, "Ожидается table_name в формате database.table")
+            raise HTTPException(400, "table_name is expected in database.table format")
     database = (request.schema_name or request.catalog_name or qualified_database
                 or config.get("database") or config.get("dbname") or "default")
     if qualified_database and qualified_database != database:
-        raise HTTPException(400, "База в table_name не совпадает с schema_name/catalog_name")
+        raise HTTPException(400, "The database in table_name does not match schema_name/catalog_name")
     client = get_clickhouse_client(config)
     try:
         parameters = {"database": database, "table": table_name}
@@ -148,7 +148,7 @@ def inspect_clickhouse(config, request):
                           sampling_key, create_table_query FROM system.tables
                           WHERE database = {database:String} AND name = {table:String}""")
         if not tables:
-            raise HTTPException(404, "Объект ClickHouse не найден")
+            raise HTTPException(404, "ClickHouse object not found")
         table = tables[0]
         result = _result("clickhouse", request.catalog_name, database, table_name,
                          {"View": "view", "MaterializedView": "materialized view"}.get(table["engine"], "table"))
@@ -191,9 +191,9 @@ def inspect_table(config, request):
     engine = str(config.get("connection_type") or "").strip().lower()
     adapter = ADAPTERS.get(engine)
     if adapter is None:
-        raise HTTPException(400, f"Чтение структуры для типа подключения '{engine}' пока не поддерживается")
+        raise HTTPException(400, f"Reading structure for connection type '{engine}' is not yet supported")
     if not request.table_name.strip() or "\x00" in request.table_name:
-        raise HTTPException(400, "Некорректный table_name")
+        raise HTTPException(400, "Invalid table_name")
     return adapter(config, request)
 
 

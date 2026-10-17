@@ -29,7 +29,7 @@ const UniversalTable = ({
   syncOperationsSelection = false,
   openButtonText2 = 'Open 2',
 
-  // Для серверной пагинации через внешний store, позже используем в Data manage
+  // For server-side pagination via an external store, later use in Data manage
   totalRows,
   pageLimit = PAGE_SIZE,
   pageOffset = 0,
@@ -376,7 +376,7 @@ const UniversalTable = ({
 
         clearSelectionState();
       } catch (e) {
-        console.error('Ошибка загрузки таблицы', e);
+        console.error('Error loading table', e);
         setRowData([]);
         setTotal(0);
       } finally {
@@ -447,7 +447,7 @@ const UniversalTable = ({
         setColumnDefs(buildColumnDefs(normalized.rows));
       }
     } catch (e) {
-      console.error('Ошибка подсчёта строк', e);
+      console.error('Error counting rows', e);
     } finally {
       setCountLoading(false);
     }

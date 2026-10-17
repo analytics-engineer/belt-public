@@ -53,7 +53,7 @@ export default function OperationsTab({ API_URL }) {
 
     try {
       const res = await fetch(`${API_URL}/operations/connections`);
-      if (!res.ok) throw new Error(`Ошибка: ${res.status}`);
+      if (!res.ok) throw new Error(`Error: ${res.status}`);
 
       const data = await res.json();
       setConnections(Array.isArray(data) ? data : []);
@@ -75,7 +75,7 @@ export default function OperationsTab({ API_URL }) {
         `${API_URL}/operations/objects?connection_id=${encodeURIComponent(selectedConnectionId)}`
       );
 
-      if (!res.ok) throw new Error(`Ошибка: ${res.status}`);
+      if (!res.ok) throw new Error(`Error: ${res.status}`);
 
       const data = await res.json();
       setObjects(Array.isArray(data) ? data : []);
@@ -137,7 +137,7 @@ export default function OperationsTab({ API_URL }) {
         })
       );
 
-      if (!res.ok) throw new Error(`Ошибка: ${res.status}`);
+      if (!res.ok) throw new Error(`Error: ${res.status}`);
 
       const data = await res.json();
 
@@ -231,7 +231,7 @@ Request ID: ${selectedRequest.request_id}`
           throw new Error(detail.message || JSON.stringify(detail));
         }
 
-        throw new Error(detail || `Ошибка удаления: ${res.status}`);
+        throw new Error(detail || `Deletion error: ${res.status}`);
       }
 
       clearOperationsSelectedRequest();

@@ -108,7 +108,7 @@ export default function App() {
       setSavedChains(chainsRes.data);
       setConnections(connRes.data);
     } catch (err) {
-      console.error('Ошибка загрузки данных:', err.response?.data?.detail || err.message);
+      console.error('Error loading data:', err.response?.data?.detail || err.message);
     }
   }, []);
 
@@ -176,7 +176,7 @@ export default function App() {
 
     if (!isExistingObject) {
       name = prompt(
-        isProcessChain ? "Введите название process chain:" : "Введите название новой модели:",
+        isProcessChain ? "Enter process chain name:" : "Enter new model name:",
         isProcessChain ? "New Process Chain" : "New Flow"
       );
 
@@ -217,10 +217,10 @@ export default function App() {
         });
       }
 
-      alert('Сохранено');
+      alert('Saved');
       fetchData();
     } catch (err) {
-      alert('Ошибка: ' + (err.response?.data?.detail || err.message));
+      alert('Error: ' + (err.response?.data?.detail || err.message));
     }
   };
 
@@ -236,10 +236,10 @@ export default function App() {
   };
 
   const saveConnection = async () => {
-    if (!newConnName) return alert('Введите имя подключения');
+    if (!newConnName) return alert('Enter connection name');
     try {
       const config = JSON.parse(newConnConfig);
-      const isEditing = activeTab?.connData?.id; // Проверяем, редактируем ли мы
+      const isEditing = activeTab?.connData?.id; // Check whether we are editing
 
       if (isEditing) {
         await axios.put(`${API_URL}/connections/${activeTab.connData.id}`, {
@@ -255,10 +255,10 @@ export default function App() {
         });
       }
       alert('Saved');
-      if (!isEditing) setNewConnName(''); // Очищаем только если новый
+      if (!isEditing) setNewConnName(''); // Clear only if it is new
       fetchData();
     } catch (err) {
-      alert('Error: ' + (err.response?.data?.detail || 'Неверный формат JSON'));
+      alert('Error: ' + (err.response?.data?.detail || 'Invalid JSON format'));
     }
   };
 
@@ -449,7 +449,7 @@ export default function App() {
       setNodes(activeTab.data.nodes || []);
       setEdges(activeTab.data.edges || []);
     }
-  }, [activeTabId, activeTab]); // Срабатывает при каждом клике по вкладке
+  }, [activeTabId, activeTab]); // Triggers on each tab click
 
   useEffect(() => {
     fetch(`${API_URL}/api/user-settings`)
@@ -469,7 +469,7 @@ export default function App() {
       });
   }, [setUserSettings]);
 
-  // Внутри компонента App
+  // Inside the App component
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [openFolders, setOpenFolders] = useState({});
 
@@ -525,7 +525,7 @@ export default function App() {
     const newName = prompt("Rename flow to:", oldName);
     if (!newName || newName === oldName) return;
     try {
-      // Нам нужно получить текущие данные flow, чтобы не затереть их (data)
+      // We need to get the current flow data so we do not overwrite it (data)
       const res = await axios.get(`${API_URL}/flows/${id}`);
       await axios.put(`${API_URL}/flows/${id}`, { name: newName, data: res.data.data });
       fetchData();
@@ -573,7 +573,7 @@ export default function App() {
     }
   };
 
-  // 1. Универсальное открытие (двойной клик)
+  // 1. Universal opening (double click)
   const handleOpenEntity = async (id, entityType) => {
     try {
       const res = await axios.get(`${API_URL}/${entityType}/${id}`);
@@ -609,21 +609,21 @@ export default function App() {
         });
       }
     } catch (err) {
-      alert('Ошибка открытия');
+      alert('Error opening');
     }
   };
 
-  // 2. Универсальное удаление
+  // 2. Universal deletion
   const handleGeneralDelete = async (id, type) => {
-    const titles = { flows: 'модель', connections: 'соединение', 'process-chains': 'цепочку' };
-    if (!window.confirm(`Удалить ${titles[type]}?`)) return;
+    const titles = { flows: 'flow', connections: 'connection', 'process-chains': 'process chain' };
+    if (!window.confirm(`Delete ${titles[type]}?`)) return;
 
     try {
       await axios.delete(`${API_URL}/${type}/${id}`);
-      fetchData(); // Обновляем списки в сайдбаре
+      fetchData(); // Update the lists in the sidebar
       setActiveMenuId(null);
     } catch (err) {
-      alert(`Ошибка при удалении: ${err.message}`);
+      alert(`Deletion error: ${err.message}`);
     }
   };
 
@@ -787,7 +787,7 @@ export default function App() {
 
   const handleApplyToStore = () => {
     if (activeTab?.type === 'flow') {
-      // Записываем текущее состояние холста в память вкладки
+      // Save the current canvas state to the tab memory
       updateTabFileData(activeTab.id, { nodes, edges });
     }
   };
@@ -797,7 +797,7 @@ export default function App() {
     const isChain = activeTab?.id.startsWith('chain-');
 
     if (!isFlow && !isChain) {
-      return alert('Сначала сохраните объект, чтобы запустить его');
+      return alert('Save the object first to run it');
     }
 
     const confirmRun = window.confirm("Are you sure you want run this?");
@@ -828,11 +828,11 @@ export default function App() {
 
   const saveCron = async () => {
     if (!activeChainId) {
-      return alert('Сначала сохраните process chain');
+      return alert('Save the process chain first');
     }
 
     if (!cronExpr.trim()) {
-      return alert('Введите cron выражение');
+      return alert('Enter a cron expression');
     }
 
     try {
@@ -844,7 +844,7 @@ export default function App() {
       });
 
       setChainSchedule(res.data);
-      alert('Cron сохранён');
+      alert('Cron saved');
     } catch (err) {
       alert('Cron error: ' + (err.response?.data?.detail || err.message));
     } finally {
@@ -854,11 +854,11 @@ export default function App() {
 
   const enableCron = async () => {
     if (!activeChainId) {
-      return alert('Сначала сохраните process chain');
+      return alert('Save the process chain first');
     }
 
     if (!cronExpr.trim()) {
-      return alert('Введите cron выражение');
+      return alert('Enter a cron expression');
     }
 
     try {
@@ -914,7 +914,7 @@ export default function App() {
       } catch (err) {
         setChainSchedule(null);
         setCronExpr('');
-        console.error('Ошибка загрузки cron:', err.response?.data?.detail || err.message);
+        console.error('Error loading cron:', err.response?.data?.detail || err.message);
       }
     };
 
@@ -1046,7 +1046,7 @@ export default function App() {
       setConnectionType(activeTab.connData.connection_type || '');
       setNewConnConfig(JSON.stringify(activeTab.connData.config, null, 2));
     } else if (activeTab?.type === 'conn_form') {
-      // Если это вкладка создания нового коннекшна
+      // If this is the tab for creating a new connection
       setNewConnName('');
       setConnectionType('');
       setNewConnConfig(``);
@@ -1142,16 +1142,16 @@ export default function App() {
         <button
           type="button"
           onClick={async () => {
-            // Прямая навигация не передаёт Authorization-заголовок, поэтому грузим HTML через fetch и открываем как blob.
+            // Direct navigation does not pass the Authorization header, so we load the HTML via fetch and open it as a blob.
             const response = await fetch(`${API_URL}/auto-docs/html`);
             if (!response.ok) {
-              alert('Не удалось открыть автодокументацию');
+              alert('Could not open auto-documentation');
               return;
             }
             const html = await response.blob();
             const blobUrl = URL.createObjectURL(html);
             window.open(blobUrl, '_blank', 'noopener,noreferrer');
-            // Освобождаем blob сразу после открытия, чтобы не копился в памяти вкладки.
+            // Release the blob right after opening so it does not accumulate in the tab memory.
             setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
           }}
           className="belt-button belt-button-small"
@@ -1228,7 +1228,7 @@ export default function App() {
             <div style={{ flexShrink: 0 }}>
               {renderSlashTree(buildTreeBySlash(connections, 'connections'))}
 
-              {/* Заглушка-распорка */}
+              {/* Spacer placeholder */}
               <div style={{ height: '60px' }} />
             </div>
           )}
@@ -1248,7 +1248,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* Заглушка-распорка */}
+              {/* Spacer placeholder */}
 
               <div style={{ height: '60px' }} />
             </div>
@@ -1281,19 +1281,19 @@ export default function App() {
           }}
         />
 
-        {/* ПРАВАЯ РАБОЧАЯ ОБЛАСТЬ */}
+        {/* RIGHT WORK AREA */}
         {/*<div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', background: 'var(--workspace-bg)' }}>*/}
         <div style={{
           flex: '1 1 0', minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column',
           background: 'var(--workspace-bg)'
         }}>
-          {/* 1. Зона вкладок - теперь они живут ВЫШЕ забора */}
+          {/* 1. Tab area - the tabs now live ABOVE the divider */}
           {/* <div style={{ padding: '0px 10px 0 10px', zIndex: 10 }}>*/}
           <div style={{ padding: '0px 10px 0 10px', zIndex: 10, minWidth: 0 }}>
             <Tabs />
           </div>
 
-          {/* 2. Рабочий холст (Квадрат) */}
+          {/* 2. Work canvas (Square) */}
           <div style={{
             flexGrow: 1,
             margin: '0 10px 10px 10px',

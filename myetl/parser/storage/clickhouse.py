@@ -180,7 +180,7 @@ def get_transformation_batches(conn, journal_table, source_table, target_table, 
         params = (source_table, target_table)
 
     else:
-        raise ValueError(f"Неизвестный mode для transformation: {mode}")
+        raise ValueError(f"Unknown mode for transformation: {mode}")
 
     with conn.cursor() as cur:
         cur.execute(query, params)
@@ -200,16 +200,16 @@ def validate_transformation_columns(columns):
 
     if bad_cols:
         raise ValueError(
-            "В поле Columns нельзя указывать технические поля: "
+            "Technical fields cannot be specified in the Columns field: "
             + ", ".join(bad_cols)
-            + ". Укажи только бизнес-колонки. "
-            + "tech_request_id и tech_batch_id добавляются системой автоматически."
+            + ". Specify only business columns. "
+            + "tech_request_id and tech_batch_id are added automatically by the system."
         )
 
     business_cols = [c.strip().replace("`", "").replace('"', "") for c in columns if c.strip()]
 
     if not business_cols:
-        raise ValueError("Для ClickHouse transformation нужно указать бизнес-колонки в target Columns")
+        raise ValueError("Business columns must be specified in target Columns for ClickHouse transformation")
 
     return business_cols
 
@@ -238,7 +238,7 @@ def build_ch_where_cond(request_id, batch_id, batch_column, batch_from, batch_to
 
 def run_transformation(parsed_flow):
     if parsed_flow.get("source_type") != "clickhouse":
-        raise NotImplementedError("ClickHouse transformation пока поддерживает только ClickHouse source")
+        raise NotImplementedError("ClickHouse transformation currently supports only ClickHouse source")
 
     source_data = parsed_flow["source_data"]
     transform_data = parsed_flow["transform_data"]
@@ -261,7 +261,7 @@ def run_transformation(parsed_flow):
 
         user_sql = transform_data.get("sql") or source_data.get("sql")
         if not user_sql:
-            raise ValueError("Для ClickHouse transformation не указан SQL")
+            raise ValueError("SQL is not specified for ClickHouse transformation")
 
         columns = parse_columns(
             target_data.get("columns")
@@ -275,7 +275,7 @@ def run_transformation(parsed_flow):
         now = lambda: datetime.now(timezone.utc)
 
         if mode not in ("full", "delta"):
-            raise ValueError(f"Неизвестный mode для ClickHouse transformation: {mode}")
+            raise ValueError(f"Unknown mode for ClickHouse transformation: {mode}")
 
         batches = get_transformation_batches(
             conn=journal_conn,
@@ -337,7 +337,7 @@ def run_transformation(parsed_flow):
 
             try:
                 if staging_table and target_delta_column not in business_cols:
-                    raise ValueError("Target delta column должна присутствовать в Columns")
+                    raise ValueError("Target delta column must be present in Columns")
                 insert_sql = f"""
                     INSERT INTO {quote_table(staging_table or target_table)} ({insert_cols_sql})
                     SELECT

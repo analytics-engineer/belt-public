@@ -99,7 +99,7 @@ def add_grain(dt, grain):
     if grain == "year":
         return dt.replace(year=dt.year + 1, month=1, day=1)
 
-    raise ValueError(f"Неизвестный delta_batch_grain: {grain}")
+    raise ValueError(f"Unknown delta_batch_grain: {grain}")
 
 
 def add_date_grain(d, grain):
@@ -112,7 +112,7 @@ def add_date_grain(d, grain):
     if grain == "year":
         return d.replace(year=d.year + 1, month=1, day=1)
 
-    raise ValueError(f"Для date delta поддерживается day/month/year, получено: {grain}")
+    raise ValueError(f"For date delta, day/month/year are supported, got: {grain}")
 
 
 def get_last_success_watermark_to(conn, journal_table, source_table, target_table, mode, delta_column_type):
@@ -198,13 +198,13 @@ def build_int_delta_batches(source_data, last_to):
     batch_size_raw = source_data.get("delta_batch_grain")
 
     if batch_size_raw in (None, ""):
-        raise ValueError("Для int delta нужно указать delta_batch_grain как размер batch")
+        raise ValueError("delta_batch_grain must be specified as the batch size for int delta")
 
     start_value = int(last_to) if last_to not in (None, "") else int(delta_start)
     batch_size = int(batch_size_raw)
 
     if batch_size <= 0:
-        raise ValueError("Для int delta размер batch должен быть больше 0")
+        raise ValueError("Batch size must be greater than 0 for int delta")
 
     max_value = get_int_delta_max_value(source_data)
 
@@ -250,7 +250,7 @@ def build_date_delta_batches(source_data, last_to, now):
     safety_seconds = int(source_data.get("safety_seconds") or 0)
 
     if grain == "hour":
-        raise ValueError("Для date delta нельзя использовать grain=hour")
+        raise ValueError("grain=hour cannot be used for date delta")
 
     if last_to:
         start_dt = parse_dt(last_to, timezone_name) - timedelta(seconds=safety_seconds)
@@ -362,13 +362,13 @@ def build_delta_batches(parsed_flow, request_id, now):
     delta_start = source_data.get("delta_start")
 
     if not delta_column:
-        raise ValueError("Для delta не указан delta_column")
+        raise ValueError("delta_column is not specified for delta")
 
     if delta_start in (None, ""):
-        raise ValueError("Для delta не указан delta_start")
+        raise ValueError("delta_start is not specified for delta")
 
     if delta_column_type not in ("timestamp", "date", "int"):
-        raise ValueError(f"Неизвестный delta_column_type: {delta_column_type}")
+        raise ValueError(f"Unknown delta_column_type: {delta_column_type}")
 
     with get_journal_conn() as conn:
         last_to = get_last_success_watermark_to(
@@ -404,7 +404,7 @@ def build_batches(parsed_flow, request_id, now):
     if mode == "delta":
         return build_delta_batches(parsed_flow, request_id, now)
 
-    raise ValueError(f"Неизвестный mode для Postgres: {mode}")
+    raise ValueError(f"Unknown mode for Postgres: {mode}")
 
 
 def get_local_journal_table(target_data):
@@ -536,7 +536,7 @@ def get_transformation_batches(conn, journal_table, source_table, target_table, 
         params = (source_table, target_table)
 
     else:
-        raise ValueError(f"Неизвестный mode для transformation: {mode}")
+        raise ValueError(f"Unknown mode for transformation: {mode}")
 
     with conn.cursor() as cur:
         cur.execute(sql, params)
@@ -569,7 +569,7 @@ def run_transformation(parsed_flow):
 
         user_sql = transform_data.get("sql") or source_data.get("sql")
         if not user_sql:
-            raise ValueError("Для transformation не указан SQL")
+            raise ValueError("SQL is not specified for transformation")
 
         columns = parse_columns(
             target_data.get("columns")
@@ -582,7 +582,7 @@ def run_transformation(parsed_flow):
         now = lambda: datetime.now(timezone.utc)
 
         if mode not in ("full", "delta"):
-            raise ValueError(f"Неизвестный mode для transformation: {mode}")
+            raise ValueError(f"Unknown mode for transformation: {mode}")
 
         batches = get_transformation_batches(
             conn=journal_conn,
