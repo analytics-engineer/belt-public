@@ -9,139 +9,125 @@ Belt is an open-source ETL application for designing and running data workflows.
 - Schedule workflow runs and inspect their execution history.
 - Review data lineage and manage transfer packages.
 
-## Deploy to a public server (recommended)
-
-This is the primary, production-oriented way to run Belt: on a fresh Ubuntu server, reachable at that server's public IPv4 address. Neither this script nor the repository sets up a domain name, TLS/HTTPS, or a reverse proxy — put your own (e.g., Nginx, Caddy, Traefik) with TLS in front of Belt if you need a domain and HTTPS.
+## Install on an Ubuntu server
 
 ### Requirements
 
-- A fresh Ubuntu server with a public IPv4 address, and root access.
-- A clone of this repository on that server (the script re-syncs it with `origin/main`).
+- A fresh Ubuntu server with a public IPv4 address and root access.
+- Network access to GitHub and container/package registries.
+- Ports 80 (Belt) and 8080 (Keycloak) accessible from your browser. If your hosting provider uses a firewall, allow these ports there.
 
 ### Start
 
-Run as root, passing the server's public IPv4 address:
+Run these commands **on the remote server as root**:
 
 ```sh
-sudo ./deploy.cloud.sh <SERVER_IP>
+apt update
+apt install -y git ca-certificates
+git clone https://github.com/analytics-engineer/belt-public.git
+cd belt-public
+bash deploy.cloud.sh <SERVER_IP>
 ```
 
-This script:
+Replace `<SERVER_IP>` with your server's public IPv4 address.
 
-- Verifies it's running on Ubuntu as root, and installs Docker if it's missing.
-- Runs `git fetch --depth 1 origin main` and `git reset --hard origin/main`, which discards any uncommitted changes in the checkout. Review the script and back up local changes before running it.
-- Generates `.env` only if one doesn't already exist, with `BELT_ENVIRONMENT=PROD`, `APP_ENV=production`, random database/Keycloak passwords and `BELT_CONNECTION_ENCRYPTION_KEY`, and OIDC enabled (`OIDC_REQUIRED=true`) pointing at a Keycloak instance served from the same server at `http://<SERVER_IP>:8080`.
-- Disables the transfer export and export-creation features by default in production (only import stays enabled).
-- Starts the stack with `docker compose up -d --build` and prints the resulting Belt and Keycloak URLs.
+The installer:
 
-Belt becomes reachable at `http://<SERVER_IP>/`, and Keycloak at `http://<SERVER_IP>:8080/`.
+- Installs Docker Engine and the Docker Compose plugin if needed.
+- Synchronizes the checkout with `origin/main` using `git reset --hard`. This discards uncommitted changes to tracked files.
+- Creates `.env` on the first run with random database and Keycloak administrator passwords and a connection-encryption key.
+- Enables OIDC authentication and configures Belt and Keycloak URLs using the supplied IP.
+- Generates `keycloak/belt-realm.json` from the template. Keycloak imports the `belt` realm and its clients on first startup; an existing realm is not overwritten.
+- Copies Python examples into `../belt_data/user_workspace/python_scripts/templates` once. You can edit or delete these copies; subsequent installer runs do not restore them. The initialization marker is stored outside the scripts directory, at `../belt_data/.examples_initialized`.
+- Builds and starts the containers. Transfer settings use `BELT_ENVIRONMENT=PROD`: import is enabled, export and export creation are disabled.
 
-### Temporary demo without HTTPS
+Open Belt at `http://<SERVER_IP>/` and Keycloak administration at `http://<SERVER_IP>:8080/admin/`. Wait for Keycloak to finish starting before signing in.
 
-The default public-server URLs use HTTP. Keycloak may show `HTTPS required` when you open its admin console through the public IP.
+The default installation uses HTTP and Keycloak's `start-dev` mode. It does not configure a domain, certificates, or a reverse proxy. `BELT_ENVIRONMENT=PROD` controls Belt's transfer features; it does not enable HTTPS or change Keycloak's startup mode.
 
-For a temporary demo, run the following **on the remote server**, from the repository directory. Authenticate using `KEYCLOAK_ADMIN_USERNAME` from `.env` (normally `admin`):
+### Allow HTTP for a temporary demo
+
+If Keycloak administration shows `HTTPS required`, run the following **on the remote server**, from `~/belt-public`.
+
+Read the generated administrator credentials:
+
+```sh
+grep -E '^KEYCLOAK_ADMIN_(USERNAME|PASSWORD)=' .env
+```
+
+Authenticate inside the container:
 
 ```sh
 docker exec -it belt-keycloak /opt/keycloak/bin/kcadm.sh config credentials \
   --server http://localhost:8080 --realm master --user admin
 ```
 
-Enter `KEYCLOAK_ADMIN_PASSWORD` from `.env` when prompted. Then allow HTTP for the admin realm:
+Enter `KEYCLOAK_ADMIN_PASSWORD` when prompted. If you changed the administrator username, replace `admin` in the command.
+
+Allow HTTP for the administration realm:
 
 ```sh
 docker exec belt-keycloak /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
 ```
 
-Open `http://<SERVER_IP>:8080/admin/`. Once the `belt` realm exists, allow HTTP for it as well:
+Then open `http://<SERVER_IP>:8080/admin/`. The imported `belt` realm already allows HTTP. If you are reusing an older realm that still requires HTTPS, run:
 
 ```sh
 docker exec belt-keycloak /opt/keycloak/bin/kcadm.sh update realms/belt -s sslRequired=NONE
 ```
 
-The supplied Belt realm template already contains `"sslRequired": "none"`; if it was imported successfully, the second update is unnecessary. A `Resource not found` response means the `belt` realm must first be created or imported.
+These settings persist in the Keycloak database across container restarts. A `Resource not found` response for `realms/belt` means the realm was not imported; check `docker compose logs keycloak`.
 
-These settings persist in the Keycloak database across container restarts. `KC_HTTP_ENABLED=true` alone does not disable a realm's HTTPS requirement.
+**HTTP does not encrypt passwords or tokens. Use this setup for a temporary demo with disposable credentials and no sensitive data.** A production deployment needs a separately configured Keycloak `start` setup and HTTPS for public access. This installer does not automate that configuration.
 
-**HTTP does not encrypt passwords or tokens in transit. Use disposable demo credentials and no sensitive data.** This setting only removes Keycloak's HTTPS restriction; browser features used for OIDC/PKCE may still require HTTPS on a public IP. For production, configure HTTPS for Belt and Keycloak, update their public/OIDC and client redirect URLs, and restore **Require SSL** to **External requests** (or **All requests**) in both realms.
+### Create your first Belt user
 
-### Finish the Keycloak setup
+The realm and clients are imported automatically, but the template contains no users and self-registration is disabled.
 
-This script does not provision the Keycloak realm or client it configures (`belt` / `belt-frontend`). After it finishes:
+1. Sign in to Keycloak administration using the administrator credentials from `.env`.
+2. Select the **belt** realm, then open **Users** and create a user.
+3. In the user's **Credentials** tab, set a password. For a demo without a password-change prompt, disable **Temporary**.
+4. In **Role mapping**, assign client roles from **belt-frontend**. Use **developer** to design and run workflows; add **deploy** if the user should import transfer packages.
+5. Open `http://<SERVER_IP>/` and sign in with the new user.
 
-1. Log in to Keycloak at `http://<SERVER_IP>:8080` with the admin credentials written to `.env` on the server.
-2. Create the `belt` realm and the `belt-frontend` client yourself.
+The Keycloak administrator in the `master` realm and the Belt user in the `belt` realm are separate accounts.
 
-Until you do, the frontend cannot complete OIDC login.
+## Inspecting and stopping the deployment
 
-### Inspecting and stopping the deployment
-
-```sh
-docker compose ps
-docker compose logs -f
-docker compose down          # stop; keeps named volumes
-docker compose down -v       # also delete persisted database data
-```
-
-### Quick, development-style alternative: `deploy.sh`
-
-`deploy.sh` targets the same kind of Ubuntu server but skips Keycloak/OIDC setup entirely — it runs with OIDC disabled and Keycloak's default local admin credentials, the same as local development below. **This is not secure for a public server** and should only be used for throwaway/test servers.
-
-```sh
-./deploy.sh
-```
-
-## Run locally with Docker Compose (development)
-
-Use this to run Belt on your own machine at `localhost`, for development only.
-
-### Requirements
-
-- Docker Engine
-- Docker Compose v2 (`docker compose`)
-
-### Start
-
-1. Copy the example configuration:
-
-   ```sh
-   cp .env.example .env
-   ```
-
-2. Generate an encryption key and put its output in `BELT_CONNECTION_ENCRYPTION_KEY` in `.env`:
-
-   ```sh
-   openssl rand -base64 32
-   ```
-
-   Keep this key private and stable. Belt uses it to encrypt saved connection secrets; changing it makes previously encrypted secrets unreadable.
-
-3. Start the application from the repository root:
-
-   ```sh
-   docker compose up --build -d
-   ```
-
-4. Open [http://localhost](http://localhost).
-
-The local Compose configuration also starts PostgreSQL, Redis, and Keycloak. PostgreSQL and Redis data are stored in Docker volumes. Keycloak is available at [http://localhost:8080](http://localhost:8080), but no Belt realm or client is provisioned automatically. OIDC is disabled in the local example.
-
-To use a different host port for the web interface, set `FRONTEND_PORT` in `.env`. OIDC settings prefixed with `REACT_APP_` are embedded when the frontend is built, so set them in `.env` before running `docker compose up --build`.
-
-To inspect service status and logs:
+Run from the repository directory on the server:
 
 ```sh
 docker compose ps
 docker compose logs -f
 ```
 
-Stop the services with `docker compose down`. This preserves named volumes. To also delete the persisted database data, use `docker compose down -v`.
+To stop the containers while preserving data:
 
-### Configuration and security
+```sh
+docker compose down
+```
 
-`.env.example` contains development-only settings. Replace the example database and Keycloak passwords before exposing the application outside your machine. Do not publish `.env`, encryption keys, or production credentials.
+**Do not add `-v` unless you intend to delete the Docker volumes containing the databases and Redis data.** User Python files are stored separately in `../belt_data/user_workspace/python_scripts`.
 
-OIDC authentication is disabled in the local example for development. Production deployments must configure an OIDC provider and set the matching frontend and backend OIDC settings; do not use the local authentication settings on a public server.
+## Re-running the installer
+
+From the repository directory on the server:
+
+```sh
+git pull origin main
+bash deploy.cloud.sh <SERVER_IP>
+```
+
+Back up your data before updating. The installer retains an existing `.env`, databases, and user Python files. It does not replace an existing Keycloak realm or rerun the database initialization SQL against an existing database; this is not an automatic database migration procedure.
+
+Passing a different IP does not update URLs already stored in `.env`. If the server address changes, update the public/OIDC URLs in `.env` and the existing Keycloak client's redirect and origin settings. Frontend `REACT_APP_` settings are embedded during the build.
+
+## Configuration and data
+
+- `.env` contains generated passwords and `BELT_CONNECTION_ENCRYPTION_KEY`. Keep it private and preserve the encryption key: changing it makes saved connection secrets unreadable.
+- PostgreSQL, Keycloak's PostgreSQL database, and Redis use Docker volumes.
+- User Python files live in `../belt_data/user_workspace/python_scripts`, shared with the backend and workers.
+- Back up both the database data and user Python files, together with the private configuration needed to restore them.
 
 ## License
 
