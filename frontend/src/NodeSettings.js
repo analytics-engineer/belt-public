@@ -376,14 +376,35 @@ const NodeSettings = ({ activeTab, connections }) => {
     return true;
   });
 
-  const handleDownloadPythonFile = () => {
+  const handleDownloadPythonFile = async () => {
     if (!formData.script_path) {
       alert("Select python file");
       return;
     }
 
-    window.location.href =
-      `${getApiUrl()}/workspace/download-python?path=${encodeURIComponent(formData.script_path)}`;
+    try {
+      // Direct navigation does not pass the Authorization header, so we load the file via fetch
+      // and trigger the download from a blob instead.
+      const response = await fetch(
+        `${getApiUrl()}/workspace/download-python?path=${encodeURIComponent(formData.script_path)}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = formData.script_path.split('/').pop();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      alert(`Could not download file: ${err.message}`);
+    }
   };
 
   const handleDeletePythonFile = async () => {
